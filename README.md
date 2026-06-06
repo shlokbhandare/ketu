@@ -10,7 +10,7 @@ and cost, and coordinating across distributed instances.
  Under active construction[6/6/26]
 
 ## Built by
-Shlok — age 16, Mumbai.
+Shlok: 16 years old, Mumbai, India.
 
 ## Architecture
 Shlok is the Systems Architect, designing components, data flows, and 
