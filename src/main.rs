@@ -15,15 +15,15 @@ struct RouteRequest {
 
 #[derive(Serialize)]
 struct RouteResponse {
-    backend: String,
-    prompt_chars: usize,
+    response: String,
 }
 
 async fn route(Json(payload): Json<RouteRequest>) -> Json<RouteResponse> {
-    Json(RouteResponse {
-        backend: format!("backend-for-{}", payload.model),
-        prompt_chars: payload.prompt.len(),
-    })
+    let response = ollama::generate(&payload.prompt, "llama3.2:3b")
+        .await
+        .unwrap_or_else(|e| format!("Error: {}", e));
+
+    Json(RouteResponse { response })
 }
 
 #[tokio::main]
