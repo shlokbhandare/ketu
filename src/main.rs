@@ -1,6 +1,8 @@
 use axum::{routing::get, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
 
+mod ollama;
+
 async fn health() -> &'static str {
     "ok"
 }
