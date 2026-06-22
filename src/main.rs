@@ -1,7 +1,10 @@
 use axum::{routing::get, routing::post, Json, Router};
 use serde::{Deserialize, Serialize};
 
+mod backend;
 mod ollama;
+
+use backend::BackendPool;
 
 async fn health() -> &'static str {
     "ok"
@@ -28,6 +31,11 @@ async fn route(Json(payload): Json<RouteRequest>) -> Json<RouteResponse> {
 
 #[tokio::main]
 async fn main() {
+    let backend_pool = BackendPool::new(vec![
+        "http://localhost:11434".to_string(),
+        "http://localhost:11435".to_string(),
+    ]);
+
     let app = Router::new()
         .route("/health", get(health))
         .route("/route", post(route));

@@ -1,5 +1,10 @@
 # Build Log
 
+## June 23, 2026
+**feat: backend pool struct**
+Description:
+>Use of a struct here: Allowed the function of addition and subtraction of more models for use and calling, thereby adding the first instance of actionable scalability in this project.
+
 ## June 15, 2026
 **feat: router forwards prompts to ollama backend**
 
