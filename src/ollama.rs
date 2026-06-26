@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-const OLLAMA_GENERATE_URL: &str = "http://localhost:11434/api/generate";
+
 
 #[derive(Serialize)]
 struct GenerateRequest<'a> {
@@ -14,7 +14,7 @@ struct GenerateResponse {
     response: String,
 }
 
-pub async fn generate(prompt: &str, model: &str) -> Result<String, reqwest::Error> {
+pub async fn generate(url: &str, prompt: &str, model: &str) -> Result<String, reqwest::Error> {
     let body = GenerateRequest {
         model,
         prompt,
@@ -22,7 +22,7 @@ pub async fn generate(prompt: &str, model: &str) -> Result<String, reqwest::Erro
     };
 
     let response = reqwest::Client::new()
-        .post(OLLAMA_GENERATE_URL)
+        .post(format!("{}/api/generate", url))
         .json(&body)
         .send()
         .await?

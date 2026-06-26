@@ -1,5 +1,12 @@
 # Build Log
 
+## June 26, 2026
+**feat: round-robin load balancing across backends**
+Description:
+
+>Round-robin: a cycling alternating algorithm, like dealing cards to players, each backend gets a request in turn regardless of anything else. Alternative: least latency routing, instead of blind alternation, the request goes to whichever backend is currently responding fastest. Used when backends have unequal performance and sending to a slow one wastes time.
+
+
 ## June 23, 2026
 **feat: backend pool struct**
 Description:
