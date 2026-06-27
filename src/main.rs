@@ -1,11 +1,10 @@
 use axum::{extract::State, routing::get, routing::post, Json, Router};
-use std::sync::Arc;
 use serde::{Deserialize, Serialize};
-use backend::Backend;
+use std::sync::Arc;
 mod backend;
 mod ollama;
 
-use backend::BackendPool;
+use backend::{Backend, BackendPool};
 
 async fn health() -> &'static str {
     "ok"
@@ -15,6 +14,11 @@ async fn health() -> &'static str {
 struct RouteRequest {
     model: String,
     prompt: String,
+}
+
+#[derive(Deserialize)]
+struct Config {
+    backends: Vec<Backend>,
 }
 
 #[derive(Serialize)]
@@ -36,12 +40,14 @@ async fn route(
 
 #[tokio::main]
 async fn main() {
-        let backend_pool = Arc::new(BackendPool::new(vec![
-    Backend { url: "http://localhost:11434".to_string(), model: "llama3.2:3b".to_string() },
-    Backend { url: "http://localhost:11435".to_string(), model: "qwen2.5:7b".to_string() },
-]));
+    let config_contents = std::fs::read_to_string("config.toml")
+        .expect("failed to read config.toml");
+    let config: Config = toml::from_str(&config_contents)
+        .expect("failed to parse config.toml");
 
-        let app = Router::new()
+    let backend_pool = Arc::new(BackendPool::new(config.backends));
+
+    let app = Router::new()
         .route("/health", get(health))
         .route("/route", post(route))
         .with_state(backend_pool);

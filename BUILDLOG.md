@@ -1,5 +1,12 @@
 # Build Log
 
+## June 27, 2026
+**feat: weighted routing with config file**
+Description:
+
+>Weighted routing: used when one server is bigger and can handle much more requests compared to another. If both weights are equal, it equally splits the traffic, effectively normal round robin. 
+>Real world: Nginx has a `weight` parameter in its upstream config with the same concept; AWS ALB (Application Load Balancer) also does weighted target groups.
+
 ## June 26, 2026
 **feat: round-robin load balancing across backends**
 Description:

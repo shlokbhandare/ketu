@@ -1,12 +1,120 @@
-   0.338243200s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint: stale: changed "D:\\ShloksMess\\Ketu\\ketu\\src\\main.rs"
-   0.338295400s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint:           (vs) "D:\\ShloksMess\\Ketu\\ketu\\target\\debug\\.fingerprint\\ketu-3d891e80b2650f4c\\dep-bin-ketu"
-   0.338305400s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 13426914910, nanos: 389005400 } < FileTime { seconds: 13426917308, nanos: 739767900 }
-   0.338856200s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint: fingerprint dirty for ketu v0.1.0 (D:\ShloksMess\Ketu\ketu)/Check { test: false }/TargetInner { name: "ketu", doc: true, ..: with_path("D:\\ShloksMess\\Ketu\\ketu\\src\\main.rs", Edition2021) }
-   0.338903900s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "D:\\ShloksMess\\Ketu\\ketu\\target\\debug\\.fingerprint\\ketu-3d891e80b2650f4c\\dep-bin-ketu", reference_mtime: FileTime { seconds: 13426914910, nanos: 389005400 }, stale: "D:\\ShloksMess\\Ketu\\ketu\\src\\main.rs", stale_mtime: FileTime { seconds: 13426917308, nanos: 739767900 } }))
-   0.389390500s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint: stale: changed "D:\\ShloksMess\\Ketu\\ketu\\src\\backend.rs"
-   0.389422800s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint:           (vs) "D:\\ShloksMess\\Ketu\\ketu\\target\\debug\\.fingerprint\\ketu-71409ab6c097e086\\dep-test-bin-ketu"
-   0.389432900s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint:                FileTime { seconds: 13426914910, nanos: 387777700 } < FileTime { seconds: 13426916341, nanos: 592425100 }
-   0.389732000s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint: fingerprint dirty for ketu v0.1.0 (D:\ShloksMess\Ketu\ketu)/Check { test: true }/TargetInner { name: "ketu", doc: true, ..: with_path("D:\\ShloksMess\\Ketu\\ketu\\src\\main.rs", Edition2021) }
-   0.389760400s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint:     dirty: FsStatusOutdated(StaleItem(ChangedFile { reference: "D:\\ShloksMess\\Ketu\\ketu\\target\\debug\\.fingerprint\\ketu-71409ab6c097e086\\dep-test-bin-ketu", reference_mtime: FileTime { seconds: 13426914910, nanos: 387777700 }, stale: "D:\\ShloksMess\\Ketu\\ketu\\src\\backend.rs", stale_mtime: FileTime { seconds: 13426916341, nanos: 592425100 } }))
+    Blocking waiting for file lock on build directory
+  12.761420400s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint: fingerprint error for ketu v0.1.0 (D:\ShloksMess\Ketu\ketu)/Check { test: false }/TargetInner { name: "ketu", doc: true, ..: with_path("D:\\ShloksMess\\Ketu\\ketu\\src\\main.rs", Edition2021) }
+  12.761518500s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint:     err: failed to read `D:\ShloksMess\Ketu\ketu\target\debug\.fingerprint\ketu-f652a8ec290e7ff7\bin-ketu`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_libgit2_prerelease
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: git_midx_writer_dump
+  17: git_filter_source_repo
+  18: git_midx_writer_dump
+  19: BaseThreadInitThunk
+  20: RtlUserThreadStart
+  12.834856200s  INFO prepare_target{force=false package_id=toml v0.8.23 target="toml"}: cargo::core::compiler::fingerprint: fingerprint error for toml v0.8.23/Check { test: false }/TargetInner { ..: lib_target("toml", ["lib"], "C:\\Users\\Shlok\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\toml-0.8.23\\src\\lib.rs", Edition2021) }
+  12.834914300s  INFO prepare_target{force=false package_id=toml v0.8.23 target="toml"}: cargo::core::compiler::fingerprint:     err: failed to read `D:\ShloksMess\Ketu\ketu\target\debug\.fingerprint\toml-6dc3a0cd7908fd65\lib-toml`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_libgit2_prerelease
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: git_midx_writer_dump
+  18: git_filter_source_repo
+  19: git_midx_writer_dump
+  20: BaseThreadInitThunk
+  21: RtlUserThreadStart
+  12.837004600s  INFO prepare_target{force=false package_id=toml_edit v0.22.27 target="toml_edit"}: cargo::core::compiler::fingerprint: fingerprint error for toml_edit v0.22.27/Check { test: false }/TargetInner { ..: lib_target("toml_edit", ["lib"], "C:\\Users\\Shlok\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\toml_edit-0.22.27\\src\\lib.rs", Edition2021) }
+  12.837055900s  INFO prepare_target{force=false package_id=toml_edit v0.22.27 target="toml_edit"}: cargo::core::compiler::fingerprint:     err: failed to read `D:\ShloksMess\Ketu\ketu\target\debug\.fingerprint\toml_edit-98d6e1f9606a760f\lib-toml_edit`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+  12.839187200s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint: fingerprint error for ketu v0.1.0 (D:\ShloksMess\Ketu\ketu)/Check { test: true }/TargetInner { name: "ketu", doc: true, ..: with_path("D:\\ShloksMess\\Ketu\\ketu\\src\\main.rs", Edition2021) }
+  12.839225400s  INFO prepare_target{force=false package_id=ketu v0.1.0 (D:\ShloksMess\Ketu\ketu) target="ketu"}: cargo::core::compiler::fingerprint:     err: failed to read `D:\ShloksMess\Ketu\ketu\target\debug\.fingerprint\ketu-d606cdd4aa415bc3\test-bin-ketu`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_libgit2_prerelease
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: git_midx_writer_dump
+  17: git_filter_source_repo
+  18: git_midx_writer_dump
+  19: BaseThreadInitThunk
+  20: RtlUserThreadStart
+    Checking toml_edit v0.22.27
+    Checking toml v0.8.23
     Checking ketu v0.1.0 (D:\ShloksMess\Ketu\ketu)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.09s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.78s

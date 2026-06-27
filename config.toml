@@ -1,0 +1,9 @@
+[[backends]]
+url = "http://localhost:11434"
+model = "llama3.2:3b"
+weight = 70
+
+[[backends]]
+url = "http://localhost:11435"
+model = "qwen2.5:7b"
+weight = 30
