@@ -1,5 +1,12 @@
 # Build Log
 
+## June 28, 2026
+**feat: per-ip request counter**
+Description:
+
+>HashMap stores data as key-value pairs, like a storage locker rather than a bag of valuables, unlike a Vec which is just positional. 
+>IP-based tracking ensures purity in rate limiting. IP addresses are tougher to fake and provide more reliable security compared to tracking by username or session.
+
 ## June 27, 2026
 **feat: weighted routing with config file**
 Description:

@@ -1,9 +1,13 @@
-use axum::{extract::State, routing::get, routing::post, Json, Router};
+use axum::{
+    extract::{Request, State},
+    routing::{get, post},
+    Json, Router,
+};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::{collections::HashMap, sync::{Arc, Mutex}};
 mod backend;
 mod ollama;
-
+use axum::http::HeaderMap;
 use backend::{Backend, BackendPool};
 
 async fn health() -> &'static str {
@@ -26,11 +30,32 @@ struct RouteResponse {
     response: String,
 }
 
+#[derive(Clone)]
+struct AppState {
+    backend_pool: Arc<BackendPool>,
+    request_counts: Arc<Mutex<HashMap<String, u32>>>,
+}
+#[axum::debug_handler]
 async fn route(
-    State(pool): State<Arc<BackendPool>>,
+    State(state): State<AppState>,
+    headers: HeaderMap,
     Json(payload): Json<RouteRequest>,
 ) -> Json<RouteResponse> {
-    let backend = pool.next();
+    let ip = headers
+        .get("x-forwarded-for")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.split(',').next())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("unknown")
+        .to_string();
+
+    {let mut counts = state.request_counts.lock().unwrap();
+    let count = counts.entry(ip.clone()).and_modify(|c| *c += 1).or_insert(1);
+    println!("IP {} has made {} requests", ip, count);}
+    
+
+    let backend = state.backend_pool.next();
     let response = ollama::generate(&backend.url, &payload.prompt, &backend.model)
         .await
         .unwrap_or_else(|e| format!("Error: {}", e));
@@ -46,11 +71,16 @@ async fn main() {
         .expect("failed to parse config.toml");
 
     let backend_pool = Arc::new(BackendPool::new(config.backends));
+    let request_counts = Arc::new(Mutex::new(HashMap::new()));
+    let app_state = AppState {
+        backend_pool: backend_pool.clone(),
+        request_counts: request_counts.clone(),
+    };
 
     let app = Router::new()
         .route("/health", get(health))
         .route("/route", post(route))
-        .with_state(backend_pool);
+        .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
         .await
