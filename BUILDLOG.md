@@ -1,14 +1,19 @@
 # Build Log
 
+## June 29, 2026
 
-## June 30, 2026
+**feat: /stats endpoint with token counts and latency**
+Description:
+
+>Token counts are tracked to ensure fair and limited usage of servers and models, stabilizing computing costs.
+>Inference cost is the cost of all resources consumed per token, GPU compute, memory, electricity, and time. The company running the model pays these costs and recoups them by charging users per token, making token tracking essential for billing and cost attribution.
+
 **feat: per-backend latency tracking**
 Description:
 
 >Latency is the time taken for a request to be processed from send to response. 
 >p99 latency is the latency that 99% of requests fall under, meaning 1% took longer. In production, that 1% of slow requests is what users complain about, hence it matters for AI inference where cold starts (like Ollama's first load at 5044ms) can spike p99 significantly.
 
-## June 29, 2026
 **feat: rate limiting with 429 enforcement**
 Description:
 

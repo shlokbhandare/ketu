@@ -73,10 +73,18 @@ async fn route(
     let response = ollama::generate(&backend.url, &payload.prompt, &backend.model)
         .await
         .unwrap_or_else(|e| format!("Error: {}", e));
+    let token_count = (response.len() as u64) / 4;
+    state.backend_pool.record_tokens(&backend.url, token_count);
     let elapsed_ms = start.elapsed().as_millis();
     println!("Backend {} responded in {}ms", backend.url, elapsed_ms);
 
     Ok(Json(RouteResponse { response }))
+}
+
+#[axum::debug_handler]
+async fn stats(State(state): State<AppState>) -> Json<HashMap<String, u64>> {
+    let stats = state.backend_pool.get_stats();
+    Json(stats)
 }
 
 #[tokio::main]
@@ -96,6 +104,7 @@ async fn main() {
     let app = Router::new()
         .route("/health", get(health))
         .route("/route", post(route))
+        .route("/stats", get(stats))
         .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")

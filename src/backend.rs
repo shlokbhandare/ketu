@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 
 #[derive(Clone, Deserialize)]
 pub struct Backend {
@@ -12,6 +13,7 @@ pub struct BackendPool {
     pub backends: Vec<Backend>,
     current_index: Arc<Mutex<usize>>,
     weighted_order: Vec<usize>,
+    pub token_counts: Arc<Mutex<HashMap<String, u64>>>,
 }
 
 impl BackendPool {
@@ -24,6 +26,7 @@ impl BackendPool {
             backends,
             current_index: Arc::new(Mutex::new(0)),
             weighted_order,
+            token_counts: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -33,5 +36,16 @@ impl BackendPool {
         let backend = self.backends[backend_index].clone();
         *current_index = (*current_index + 1) % self.weighted_order.len();
         backend
+    }
+
+    pub fn record_tokens(&self, url: &str, count: u64) {
+        let mut map = self.token_counts.lock().unwrap();
+        let entry = map.entry(url.to_string()).or_insert(0);
+        *entry += count;
+    }
+
+    pub fn get_stats(&self) -> HashMap<String, u64> {
+        let map = self.token_counts.lock().unwrap();
+        map.clone()
     }
 }
