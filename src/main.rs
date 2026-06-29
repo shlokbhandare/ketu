@@ -69,9 +69,12 @@ async fn route(
     }
 
     let backend = state.backend_pool.next();
+    let start = std::time::Instant::now();
     let response = ollama::generate(&backend.url, &payload.prompt, &backend.model)
         .await
         .unwrap_or_else(|e| format!("Error: {}", e));
+    let elapsed_ms = start.elapsed().as_millis();
+    println!("Backend {} responded in {}ms", backend.url, elapsed_ms);
 
     Ok(Json(RouteResponse { response }))
 }

@@ -1,5 +1,13 @@
 # Build Log
 
+
+## June 30, 2026
+**feat: per-backend latency tracking**
+Description:
+
+>Latency is the time taken for a request to be processed from send to response. 
+>p99 latency is the latency that 99% of requests fall under, meaning 1% took longer. In production, that 1% of slow requests is what users complain about, hence it matters for AI inference where cold starts (like Ollama's first load at 5044ms) can spike p99 significantly.
+
 ## June 29, 2026
 **feat: rate limiting with 429 enforcement**
 Description:
