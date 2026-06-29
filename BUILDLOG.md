@@ -1,5 +1,15 @@
 # Build Log
 
+## June 29, 2026
+**feat: rate limiting with 429 enforcement**
+Description:
+
+>HTTP 429 is a status code meaning 'too many requests' returned when a client exceeds the allowed request limit. The body can be empty or contain an error message depending on implementation. 
+>Rate limiting matters in production AI systems as it prevents unexpected overloading or influx of requests sent by users with malicious intent, protecting backend resources and ensuring fair usage across all clients.
+*Known limitation:* HashMap grows unbounded, IP entries are never deleted after their window expires. 
+A malicious actor could exhaust memory by spoofing millions of unique IPs (DoS vector). 
+Fix: periodic sweep to delete stale entries. To be addressed in a later session.
+
 ## June 28, 2026
 **feat: per-ip request counter**
 Description:

@@ -1,5 +1,6 @@
 use axum::{
     extract::{Request, State},
+    http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
@@ -33,14 +34,14 @@ struct RouteResponse {
 #[derive(Clone)]
 struct AppState {
     backend_pool: Arc<BackendPool>,
-    request_counts: Arc<Mutex<HashMap<String, u32>>>,
+    request_counts: Arc<Mutex<HashMap<String, (u32, std::time::Instant)>>>,
 }
 #[axum::debug_handler]
 async fn route(
     State(state): State<AppState>,
     headers: HeaderMap,
     Json(payload): Json<RouteRequest>,
-) -> Json<RouteResponse> {
+) -> Result<Json<RouteResponse>, StatusCode> {
     let ip = headers
         .get("x-forwarded-for")
         .and_then(|value| value.to_str().ok())
@@ -50,17 +51,29 @@ async fn route(
         .unwrap_or("unknown")
         .to_string();
 
-    {let mut counts = state.request_counts.lock().unwrap();
-    let count = counts.entry(ip.clone()).and_modify(|c| *c += 1).or_insert(1);
-    println!("IP {} has made {} requests", ip, count);}
-    
+    let now = std::time::Instant::now();
+    let count = {
+        let mut counts = state.request_counts.lock().unwrap();
+        let entry = counts.entry(ip.clone()).or_insert((0, now));
+        if now.duration_since(entry.1).as_secs() >= 60 {
+            entry.0 = 0;
+            entry.1 = now;
+        }
+        entry.0 += 1;
+        println!("IP {} has made {} requests", ip, entry.0);
+        entry.0
+    };
+
+    if count > 10 {
+        return Err(StatusCode::TOO_MANY_REQUESTS);
+    }
 
     let backend = state.backend_pool.next();
     let response = ollama::generate(&backend.url, &payload.prompt, &backend.model)
         .await
         .unwrap_or_else(|e| format!("Error: {}", e));
 
-    Json(RouteResponse { response })
+    Ok(Json(RouteResponse { response }))
 }
 
 #[tokio::main]
@@ -90,3 +103,4 @@ async fn main() {
         .await
         .expect("server failed");
 }
+
