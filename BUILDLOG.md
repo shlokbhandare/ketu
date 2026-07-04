@@ -1,5 +1,11 @@
 # Build Log
 
+## July 4, 2026
+
+**fix: prune stale rate-limit entries on request**
+Description:
+>Fixed known limitaion from june 29, 2026.
+
 ## June 29, 2026
 
 **feat: /stats endpoint with token counts and latency**

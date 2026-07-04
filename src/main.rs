@@ -54,6 +54,8 @@ async fn route(
     let now = std::time::Instant::now();
     let count = {
         let mut counts = state.request_counts.lock().unwrap();
+        counts.retain(|_, (_, timestamp)| now.duration_since(*timestamp).as_secs() < 60);
+
         let entry = counts.entry(ip.clone()).or_insert((0, now));
         if now.duration_since(entry.1).as_secs() >= 60 {
             entry.0 = 0;
