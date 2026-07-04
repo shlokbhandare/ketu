@@ -2,6 +2,13 @@
 
 ## July 4, 2026
 
+**feat: automatic failover with retry logic**
+Description:
+
+>Timeout is a termination of client access to a backend if the backend is taking too long to respond. 30s is used here to accommodate my own hardware limitations, which cause AI model cold starts to run upwards of 20 seconds.
+>Failover is the transfer of operations to another backend if one backend is unable to respond for any reason. It matters in production as, in the real world, quite a lot of causative factors can cause failure in operations, hence a backup and the logic to use it is necessary.
+*Known limitation:* With only 2 backends, retries are capped at 2 total attempts, there's no distinct 3rd backend to fall back to, so the retry loop can't go for a 3rd try.
+
 **fix: prune stale rate-limit entries on request**
 Description:
 >Fixed known limitaion from june 29, 2026.

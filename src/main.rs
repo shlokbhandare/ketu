@@ -70,17 +70,39 @@ async fn route(
         return Err(StatusCode::TOO_MANY_REQUESTS);
     }
 
-    let backend = state.backend_pool.next();
-    let start = std::time::Instant::now();
-    let response = ollama::generate(&backend.url, &payload.prompt, &backend.model)
-        .await
-        .unwrap_or_else(|e| format!("Error: {}", e));
-    let token_count = (response.len() as u64) / 4;
-    state.backend_pool.record_tokens(&backend.url, token_count);
-    let elapsed_ms = start.elapsed().as_millis();
-    println!("Backend {} responded in {}ms", backend.url, elapsed_ms);
+    let mut backend = state.backend_pool.next();
 
-    Ok(Json(RouteResponse { response }))
+    for attempt in 1..=2 {
+        let start = std::time::Instant::now();
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(30),
+            ollama::generate(&backend.url, &payload.prompt, &backend.model),
+        )
+        .await;
+
+        match result {
+            Ok(Ok(response)) => {
+                let token_count = (response.len() as u64) / 4;
+                state.backend_pool.record_tokens(&backend.url, token_count);
+                let elapsed_ms = start.elapsed().as_millis();
+                println!("Backend {} responded in {}ms", backend.url, elapsed_ms);
+                return Ok(Json(RouteResponse { response }));
+            }
+            Ok(Err(err)) => {
+                let message = format!("Error: {}", err);
+                println!("Backend {} failed on attempt {}: {}", backend.url, attempt, message);
+            }
+            Err(_) => {
+                println!("Backend {} timed out on attempt {}", backend.url, attempt);
+            }
+        }
+
+        if attempt < 3 {
+            backend = state.backend_pool.next_excluding(&backend.url);
+        }
+    }
+
+    Err(StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 #[axum::debug_handler]

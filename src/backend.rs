@@ -38,6 +38,26 @@ impl BackendPool {
         backend
     }
 
+    pub fn next_excluding(&self, exclude_url: &str) -> Backend {
+        let mut current_index = self.current_index.lock().unwrap();
+        let mut candidate_index = *current_index;
+
+        for _ in 0..self.weighted_order.len() {
+            let backend_index = self.weighted_order[candidate_index];
+            let backend = &self.backends[backend_index];
+
+            if backend.url != exclude_url {
+                *current_index = (candidate_index + 1) % self.weighted_order.len();
+                return backend.clone();
+            }
+
+            candidate_index = (candidate_index + 1) % self.weighted_order.len();
+        }
+
+        let backend_index = self.weighted_order[*current_index];
+        self.backends[backend_index].clone()
+    }
+
     pub fn record_tokens(&self, url: &str, count: u64) {
         let mut map = self.token_counts.lock().unwrap();
         let entry = map.entry(url.to_string()).or_insert(0);
