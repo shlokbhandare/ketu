@@ -1,11 +1,14 @@
 use axum::{
-    extract::{Request, State},
+    extract::State,
     http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
+use clap::Parser;
 use std::{collections::HashMap, sync::{Arc, Mutex}};
+use tokio::sync::RwLock;
+use std::time::Duration;
 mod backend;
 mod ollama;
 use axum::http::HeaderMap;
@@ -26,6 +29,17 @@ struct Config {
     backends: Vec<Backend>,
 }
 
+#[derive(Parser)]
+struct Args {
+    /// Optional peer address to connect to (host:port)
+    #[arg(long)]
+    peer: Option<String>,
+
+    /// Port to listen on
+    #[arg(long, default_value = "3000")]
+    port: u16,
+}
+
 #[derive(Serialize)]
 struct RouteResponse {
     response: String,
@@ -35,6 +49,7 @@ struct RouteResponse {
 struct AppState {
     backend_pool: Arc<BackendPool>,
     request_counts: Arc<Mutex<HashMap<String, (u32, std::time::Instant)>>>,
+    peer_state: Arc<RwLock<Option<String>>>,
 }
 #[axum::debug_handler]
 async fn route(
@@ -113,6 +128,8 @@ async fn stats(State(state): State<AppState>) -> Json<HashMap<String, u64>> {
 
 #[tokio::main]
 async fn main() {
+    let args = Args::parse();
+
     let config_contents = std::fs::read_to_string("config.toml")
         .expect("failed to read config.toml");
     let config: Config = toml::from_str(&config_contents)
@@ -120,10 +137,34 @@ async fn main() {
 
     let backend_pool = Arc::new(BackendPool::new(config.backends));
     let request_counts = Arc::new(Mutex::new(HashMap::new()));
+    let peer_state: Arc<RwLock<Option<String>>> = Arc::new(RwLock::new(None));
     let app_state = AppState {
         backend_pool: backend_pool.clone(),
         request_counts: request_counts.clone(),
+        peer_state: peer_state.clone(),
     };
+
+    if let Some(addr) = args.peer {
+        let peer = addr.clone();
+        let peer_state_clone = peer_state.clone();
+        tokio::spawn(async move {
+            let client = reqwest::Client::new();
+            loop {
+                let url = format!("http://{}/health", peer);
+                match client.get(&url).send().await {
+                    Ok(resp) if resp.status().is_success() => {
+                        let mut w = peer_state_clone.write().await;
+                        *w = Some(peer.clone());
+                        println!("peer connected: {}", peer);
+                        break;
+                    }
+                    _ => {
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                    }
+                }
+            }
+        });
+    }
 
     let app = Router::new()
         .route("/health", get(health))
@@ -131,9 +172,11 @@ async fn main() {
         .route("/stats", get(stats))
         .with_state(app_state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+    let bind_addr = format!("0.0.0.0:{}", args.port);
+    println!("Starting server on http://{}", bind_addr);
+    let listener = tokio::net::TcpListener::bind(&bind_addr)
         .await
-        .expect("failed to bind to port 3000");
+        .expect(&format!("failed to bind to port {}", args.port));
 
     axum::serve(listener, app)
         .await

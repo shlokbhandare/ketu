@@ -1,5 +1,13 @@
 # Build Log
 
+
+## July 6, 2026
+
+**feat: peer discovery on startup**
+Description:
+
+>Multiple router instances allow horizontal scaling and provide redundancy, and set up the system for future global expansion. A single router instance is a single point of failure, if it goes down, all traffic routed through it dies with it. Multiple instances mean the routing layer itself survives a failure, not just the backend layer.
+
 ## July 4, 2026
 
 **feat: automatic failover with retry logic**
