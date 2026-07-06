@@ -142,3 +142,26 @@ Latency is tracked and logged per-request to the terminal but not currently expo
 - The `model` field accepted in `/route` requests is not currently used to select a backend, routing is decided entirely by round-robin/weighting. The field is kept as a placeholder for future semantic routing (choosing a backend based on the prompt itself, rather than blind rotation).
 - Retry attempts on failover are capped at 2 total, since the pool currently only has 2 backends, there's no distinct 3rd backend to fall back to if both fail.
 - Latency is tracked and logged per-request to the terminal, but not yet aggregated or exposed through the `/stats` endpoint.
+
+
+## Benchmarks
+
+### System specs:
+
+CPU: AMD Ryzen 7 7435HS 3.1 Ghz
+GPU: NVIDIA RTX 4050 Laptop GPU — 6GB VRAM
+RAM: 24GB DDR5 4800MHz
+Models: llama3.2:3b, qwen2.5:7b (via Ollama)
+
+### Ran 100 requests through Ketu using a Python script (benchmark.py), alternating short and long prompts, with a rate-limit burst included partway through the run.
+
+
+>Average latency (successful requests): 7530.77 ms
+>Error rate: 15% (15 of 100 requests)
+>Average response length (status 200): 1429.02 characters
+>Average response length (status 0): 9.00 characters
+*check benchmark_results.csv for raw data*
+
+>On the 15% error rate: these were not real failures in Ketu. The benchmark    script's own client side timeout was set to 15 seconds, while Ketu's internal timeout is 30 seconds. Under load, some long-prompt responses took longer than 15 seconds to generate, the script closed the connection before Ketu could finish, even though Ketu itself was still working correctly within its own timeout window. This surfaced a real lesson: if the tool measuring a system has a shorter timeout than the system being measured, there's a good chance the system's actual responses won't be logged or collected at all, making the system look like it's failing when it isn't.
+
+>Test conditions: this benchmark was deliberately run while on a Google Meet call with 20 participants (screen sharing, no video), chosen intentionally to simulate real-world background load rather than testing under idle conditions.
