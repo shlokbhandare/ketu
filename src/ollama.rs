@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 
 
@@ -15,6 +16,11 @@ struct GenerateResponse {
 }
 
 pub async fn generate(url: &str, prompt: &str, model: &str) -> Result<String, reqwest::Error> {
+    // TEMP: remove after testing distributed health sharing with a slow backend
+    if url.contains("11435") {
+        tokio::time::sleep(Duration::from_millis(2500)).await;
+    }
+
     let body = GenerateRequest {
         model,
         prompt,

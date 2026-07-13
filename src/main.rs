@@ -45,12 +45,21 @@ struct RouteResponse {
     response: String,
 }
 
+#[derive(Deserialize)]
+struct HealthUpdate {
+    backend_url: String,
+    slow: bool,
+}
+
 #[derive(Clone)]
 struct AppState {
     backend_pool: Arc<BackendPool>,
     request_counts: Arc<Mutex<HashMap<String, (u32, std::time::Instant)>>>,
     peer_state: Arc<RwLock<Option<String>>>,
+    backend_health: Arc<RwLock<HashMap<String, bool>>>,
+    http_client: reqwest::Client,
 }
+
 #[axum::debug_handler]
 async fn route(
     State(state): State<AppState>,
@@ -85,7 +94,7 @@ async fn route(
         return Err(StatusCode::TOO_MANY_REQUESTS);
     }
 
-    let mut backend = state.backend_pool.next();
+    let mut backend = state.backend_pool.next().await;
 
     for attempt in 1..=2 {
         let start = std::time::Instant::now();
@@ -101,6 +110,40 @@ async fn route(
                 state.backend_pool.record_tokens(&backend.url, token_count);
                 let elapsed_ms = start.elapsed().as_millis();
                 println!("Backend {} responded in {}ms", backend.url, elapsed_ms);
+
+                if elapsed_ms > 2000 {
+                    let backend_url = backend.url.clone();
+                    {
+                        let mut health = state.backend_health.write().await;
+                        health.insert(backend_url.clone(), true);
+                    }
+
+                    if let Some(peer) = state.peer_state.read().await.clone() {
+                        let backend_url = backend.url.clone();
+                        let http_client = state.http_client.clone();
+                        let backend_health = state.backend_health.clone();
+                        let backend_url_for_payload = backend_url.clone();
+                        tokio::spawn(async move {
+                            let payload = serde_json::json!({
+                                "backend_url": backend_url_for_payload,
+                                "slow": true,
+                            });
+                            let _ = http_client
+                                .post(format!("http://{}/peer/health-update", peer))
+                                .json(&payload)
+                                .send()
+                                .await;
+
+                            tokio::time::sleep(Duration::from_secs(300)).await;
+
+                            let mut health = backend_health.write().await;
+                            health.insert(backend_url.clone(), false);
+                            println!("Backend {} cooling period over, re-enabling for routing", backend_url);
+                        });
+                    }
+
+                }
+
                 return Ok(Json(RouteResponse { response }));
             }
             Ok(Err(err)) => {
@@ -113,7 +156,7 @@ async fn route(
         }
 
         if attempt < 3 {
-            backend = state.backend_pool.next_excluding(&backend.url);
+            backend = state.backend_pool.next_excluding(&backend.url).await;
         }
     }
 
@@ -121,6 +164,15 @@ async fn route(
 }
 
 #[axum::debug_handler]
+async fn peer_health_update(
+    State(state): State<AppState>,
+    Json(update): Json<HealthUpdate>,
+) -> StatusCode {
+    let mut health = state.backend_health.write().await;
+    health.insert(update.backend_url, update.slow);
+    StatusCode::OK
+}
+
 async fn stats(State(state): State<AppState>) -> Json<HashMap<String, u64>> {
     let stats = state.backend_pool.get_stats();
     Json(stats)
@@ -135,13 +187,17 @@ async fn main() {
     let config: Config = toml::from_str(&config_contents)
         .expect("failed to parse config.toml");
 
-    let backend_pool = Arc::new(BackendPool::new(config.backends));
+    let backend_health: Arc<RwLock<HashMap<String, bool>>> = Arc::new(RwLock::new(HashMap::new()));
+    let backend_pool = Arc::new(BackendPool::new(config.backends, backend_health.clone()));
     let request_counts = Arc::new(Mutex::new(HashMap::new()));
     let peer_state: Arc<RwLock<Option<String>>> = Arc::new(RwLock::new(None));
+    let http_client = reqwest::Client::new();
     let app_state = AppState {
         backend_pool: backend_pool.clone(),
         request_counts: request_counts.clone(),
         peer_state: peer_state.clone(),
+        backend_health: backend_health.clone(),
+        http_client: http_client.clone(),
     };
 
     if let Some(addr) = args.peer {
@@ -149,7 +205,14 @@ async fn main() {
         let peer_state_clone = peer_state.clone();
         tokio::spawn(async move {
             let client = reqwest::Client::new();
+            let deadline = std::time::Instant::now() + Duration::from_secs(120);
+
             loop {
+                if std::time::Instant::now() > deadline {
+                    eprintln!("warning: peer could not be reached: {}", peer);
+                    break;
+                }
+
                 let url = format!("http://{}/health", peer);
                 match client.get(&url).send().await {
                     Ok(resp) if resp.status().is_success() => {
@@ -159,7 +222,7 @@ async fn main() {
                         break;
                     }
                     _ => {
-                        tokio::time::sleep(Duration::from_secs(1)).await;
+                        tokio::time::sleep(Duration::from_secs(5)).await;
                     }
                 }
             }
@@ -169,6 +232,7 @@ async fn main() {
     let app = Router::new()
         .route("/health", get(health))
         .route("/route", post(route))
+        .route("/peer/health-update", post(peer_health_update))
         .route("/stats", get(stats))
         .with_state(app_state);
 

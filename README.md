@@ -4,7 +4,7 @@ Ketu sits between users and multiple local AI backends, deciding which model sho
 
 ## How This Was Built
 
-I (Shlok) am the Architect, assissted by Claude as a mentor, designing every component, data flow, and technical decision. AI (Cursor/Continue.dev) is the Builder, generating the Rust syntax. Every architectural decision in this project can be explained and defended by without relying on the AI that helped write it or the AI that helped plan it.
+I (Shlok) am the Architect, assisted by Claude as a mentor, designing every component, data flow, and technical decision. AI (Cursor/Continue.dev) is the Builder, generating the Rust syntax. Every architectural decision in this project can be explained and defended by me without relying on the AI that helped write it or the AI that helped plan it.
 
 ## Architecture
 
@@ -23,20 +23,20 @@ I (Shlok) am the Architect, assissted by Claude as a mentor, designing every com
            │ under limit
            ▼
 ┌─────────────────────┐
-│     BackendPool     │◄───────────────────────---──┐  round-robin + weighted
-└──────────┬──────────┘                             │  selection
-           │                                        │
-           ▼                                        │
-┌─────────────────────┐                             │
-│      ollama.rs      │  forwards request           │
-└──────────┬──────────┘                             │
-           │                                        │
-           ▼                                        │
-┌─────────────────────┐                             │
-│   Ollama Backend    │  generates response         │
-└──────────┬──────────┘                             │
-           │                                        │
-           ├── fails / timeout (max 2 attempts) ────┘
+│     BackendPool     │◄─────────────────────────┐  round-robin + weighted
+└──────────┬──────────┘                          │  selection
+           │                                     │
+           ▼                                     │
+┌─────────────────────┐                          │
+│      ollama.rs      │  forwards request        │
+└──────────┬──────────┘                          │
+           │                                     │
+           ▼                                     │
+┌─────────────────────┐                          │
+│   Ollama Backend    │  generates response      │
+└──────────┬──────────┘                          │
+           │                                     │
+           ├── fails / timeout (max 2 attempts) ─┘
            │
            │ success
            ▼
@@ -48,19 +48,16 @@ I (Shlok) am the Architect, assissted by Claude as a mentor, designing every com
 ## How to Run It
 
 **1. Install prerequisites**
-
 - [Rust](https://rustup.rs/)
 - [Ollama](https://ollama.com/)
 
 **2. Pull the models Ketu uses**
-
 ```bash
 ollama pull llama3.2:3b
 ollama pull qwen2.5:7b
 ```
 
 **3. Start two Ollama instances, on separate ports**
-
 ```bash
 # Terminal 1 — default port 11434
 ollama serve
@@ -70,7 +67,6 @@ $env:OLLAMA_HOST="127.0.0.1:11435"; ollama serve
 ```
 
 **4. Create a `config.toml` in the project root**
-
 ```toml
 [[backends]]
 url = "http://localhost:11434"
@@ -84,13 +80,11 @@ weight = 30
 ```
 
 **5. Run Ketu**
-
 ```bash
 cargo run
 ```
 
 **6. Send a test request**
-
 Using Bruno, curl, or any HTTP client, send a `POST` request to `http://localhost:3000/route`:
 
 ```json
@@ -99,7 +93,6 @@ Using Bruno, curl, or any HTTP client, send a `POST` request to `http://localhos
   "prompt": "hello"
 }
 ```
-
 A successful response returns the model's generated output as JSON.
 
 ## Endpoints
@@ -139,29 +132,28 @@ Latency is tracked and logged per-request to the terminal but not currently expo
 
 ## Known Limitations
 
-- The `model` field accepted in `/route` requests is not currently used to select a backend, routing is decided entirely by round-robin/weighting. The field is kept as a placeholder for future semantic routing (choosing a backend based on the prompt itself, rather than blind rotation).
-- Retry attempts on failover are capped at 2 total, since the pool currently only has 2 backends, there's no distinct 3rd backend to fall back to if both fail.
+- The `model` field accepted in `/route` requests is not currently used to select a backend; routing is decided entirely by round-robin/weighting. The field is kept as a placeholder for future semantic routing (choosing a backend based on the prompt itself, rather than blind rotation).
+- Retry attempts on failover are capped at 2 total. Since the pool currently only has 2 backends, there's no distinct 3rd backend to fall back to if both fail.
 - Latency is tracked and logged per-request to the terminal, but not yet aggregated or exposed through the `/stats` endpoint.
-
 
 ## Benchmarks
 
-### System specs:
+### System Specs
+* **CPU:** AMD Ryzen 7 7435HS 3.1 GHz
+* **GPU:** NVIDIA RTX 4050 Laptop GPU (6GB VRAM)
+* **RAM:** 24GB DDR5 4800MHz
+* **Models:** llama3.2:3b, qwen2.5:7b (via Ollama)
 
-CPU: AMD Ryzen 7 7435HS 3.1 Ghz
-GPU: NVIDIA RTX 4050 Laptop GPU — 6GB VRAM
-RAM: 24GB DDR5 4800MHz
-Models: llama3.2:3b, qwen2.5:7b (via Ollama)
+### Methodology
+Ran 100 requests through Ketu using a Python script (`benchmark.py`), alternating short and long prompts, with a rate-limit burst included partway through the run. *Test conditions: deliberately run while on a Google Meet call with 20 participants (screen sharing, no video) to simulate real-world background load rather than testing under idle conditions.*
 
-### Ran 100 requests through Ketu using a Python script (benchmark.py), alternating short and long prompts, with a rate-limit burst included partway through the run.
+### Results
+* **Average latency (successful requests):** 7,530.77 ms
+* **Error rate:** 15% (15 of 100 requests)
+* **Average response length (status 200):** 1,429.02 characters
+* **Average response length (status 0):** 9.00 characters
 
+*(Check `benchmark_results.csv` for raw data)*
 
->Average latency (successful requests): 7530.77 ms
->Error rate: 15% (15 of 100 requests)
->Average response length (status 200): 1429.02 characters
->Average response length (status 0): 9.00 characters
-*check benchmark_results.csv for raw data*
-
->On the 15% error rate: these were not real failures in Ketu. The benchmark    script's own client side timeout was set to 15 seconds, while Ketu's internal timeout is 30 seconds. Under load, some long-prompt responses took longer than 15 seconds to generate, the script closed the connection before Ketu could finish, even though Ketu itself was still working correctly within its own timeout window. This surfaced a real lesson: if the tool measuring a system has a shorter timeout than the system being measured, there's a good chance the system's actual responses won't be logged or collected at all, making the system look like it's failing when it isn't.
-
->Test conditions: this benchmark was deliberately run while on a Google Meet call with 20 participants (screen sharing, no video), chosen intentionally to simulate real-world background load rather than testing under idle conditions.
+> **Architectural Insight on Error Rate:**
+> These 15% were not real failures in Ketu. The benchmark script's own client-side timeout was set to 15 seconds, while Ketu's internal timeout is 30 seconds. Under load, some long-prompt responses took longer than 15 seconds to generate; the script closed the connection before Ketu could finish, even though Ketu itself was still working correctly within its own timeout window. This surfaced a real lesson: if the tool measuring a system has a shorter timeout than the system being measured, there's a good chance the system's actual responses won't be logged or collected at all, making the system look like it's failing when it isn't.
