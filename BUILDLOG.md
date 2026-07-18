@@ -1,5 +1,11 @@
 # Build Log
 
+## July 18, 2026
+
+**feat: peer heartbeat and dead peer detection**
+Description:
+
+> A heartbeat in distributed systems is a regulated signal sent between online instances. When one server detects the consecutive absence of that signal, it concludes the instance is down and logs the failure. Systems like Kubernetes and Kafka use this exact feature.
 
 ## July 13, 2026
 

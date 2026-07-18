@@ -55,7 +55,7 @@ struct HealthUpdate {
 struct AppState {
     backend_pool: Arc<BackendPool>,
     request_counts: Arc<Mutex<HashMap<String, (u32, std::time::Instant)>>>,
-    peer_state: Arc<RwLock<Option<String>>>,
+    peer_state: Arc<RwLock<Option<(String, std::time::Instant)>>>,
     backend_health: Arc<RwLock<HashMap<String, bool>>>,
     http_client: reqwest::Client,
 }
@@ -118,7 +118,7 @@ async fn route(
                         health.insert(backend_url.clone(), true);
                     }
 
-                    if let Some(peer) = state.peer_state.read().await.clone() {
+                    if let Some((peer, _)) = state.peer_state.read().await.as_ref().cloned() {
                         let backend_url = backend.url.clone();
                         let http_client = state.http_client.clone();
                         let backend_health = state.backend_health.clone();
@@ -190,7 +190,7 @@ async fn main() {
     let backend_health: Arc<RwLock<HashMap<String, bool>>> = Arc::new(RwLock::new(HashMap::new()));
     let backend_pool = Arc::new(BackendPool::new(config.backends, backend_health.clone()));
     let request_counts = Arc::new(Mutex::new(HashMap::new()));
-    let peer_state: Arc<RwLock<Option<String>>> = Arc::new(RwLock::new(None));
+    let peer_state: Arc<RwLock<Option<(String, std::time::Instant)>>> = Arc::new(RwLock::new(None));
     let http_client = reqwest::Client::new();
     let app_state = AppState {
         backend_pool: backend_pool.clone(),
@@ -205,24 +205,28 @@ async fn main() {
         let peer_state_clone = peer_state.clone();
         tokio::spawn(async move {
             let client = reqwest::Client::new();
-            let deadline = std::time::Instant::now() + Duration::from_secs(120);
 
             loop {
-                if std::time::Instant::now() > deadline {
-                    eprintln!("warning: peer could not be reached: {}", peer);
-                    break;
-                }
+                tokio::time::sleep(Duration::from_secs(10)).await;
 
                 let url = format!("http://{}/health", peer);
                 match client.get(&url).send().await {
                     Ok(resp) if resp.status().is_success() => {
                         let mut w = peer_state_clone.write().await;
-                        *w = Some(peer.clone());
-                        println!("peer connected: {}", peer);
-                        break;
+                        let was_connected = w.is_some();
+                        *w = Some((peer.clone(), std::time::Instant::now()));
+                        if !was_connected {
+                            println!("peer connected: {}", peer);
+                        }
                     }
-                    _ => {
-                        tokio::time::sleep(Duration::from_secs(5)).await;
+                    Ok(_) | Err(_) => {
+                        let mut w = peer_state_clone.write().await;
+                        if let Some((peer_url, last_seen)) = w.clone() {
+                            if last_seen.elapsed() > Duration::from_secs(30) {
+                                println!("peer lost: {}", peer_url);
+                                *w = None;
+                            }
+                        }
                     }
                 }
             }
