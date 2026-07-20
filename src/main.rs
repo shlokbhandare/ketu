@@ -51,6 +51,12 @@ struct HealthUpdate {
     slow: bool,
 }
 
+#[derive(Deserialize)]
+struct RateSync {
+    ip: String,
+    increment: u32,
+}
+
 #[derive(Clone)]
 struct AppState {
     backend_pool: Arc<BackendPool>,
@@ -89,6 +95,22 @@ async fn route(
         println!("IP {} has made {} requests", ip, entry.0);
         entry.0
     };
+
+    if let Some((peer_url, _)) = state.peer_state.read().await.as_ref().cloned() {
+        let http_client = state.http_client.clone();
+        let ip_for_sync = ip.clone();
+        tokio::spawn(async move {
+            let payload = serde_json::json!({
+                "ip": ip_for_sync,
+                "increment": 1u32,
+            });
+            let _ = http_client
+                .post(format!("http://{}/peer/rate-sync", peer_url))
+                .json(&payload)
+                .send()
+                .await;
+        });
+    }
 
     if count > 10 {
         return Err(StatusCode::TOO_MANY_REQUESTS);
@@ -173,6 +195,25 @@ async fn peer_health_update(
     StatusCode::OK
 }
 
+#[axum::debug_handler]
+async fn peer_rate_sync(
+    State(state): State<AppState>,
+    Json(sync): Json<RateSync>,
+) -> StatusCode {
+    let now = std::time::Instant::now();
+    let mut counts = state.request_counts.lock().unwrap();
+    counts.retain(|_, (_, timestamp)| now.duration_since(*timestamp).as_secs() < 60);
+
+    let entry = counts.entry(sync.ip.clone()).or_insert((0, now));
+    if now.duration_since(entry.1).as_secs() >= 60 {
+        entry.0 = 0;
+        entry.1 = now;
+    }
+    entry.0 += sync.increment;
+    println!("Peer sync for IP {} increased count to {}", sync.ip, entry.0);
+    StatusCode::OK
+}
+
 async fn stats(State(state): State<AppState>) -> Json<HashMap<String, u64>> {
     let stats = state.backend_pool.get_stats();
     Json(stats)
@@ -237,6 +278,7 @@ async fn main() {
         .route("/health", get(health))
         .route("/route", post(route))
         .route("/peer/health-update", post(peer_health_update))
+        .route("/peer/rate-sync", post(peer_rate_sync))
         .route("/stats", get(stats))
         .with_state(app_state);
 

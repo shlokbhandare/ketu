@@ -1,5 +1,13 @@
 # Build Log
 
+
+## July 20, 2026
+
+**feat: distributed rate limiting across instances**
+Description:
+
+> We made a consistency tradeoff by using fire-and-forget deltas instead of blocking the main CPU thread to maintain a perfectly synchronized shared limit. This isn't perfect, a user could squeeze in an extra 1-2 requests (e.g., 11 or 12 on a limit of 10) by simultaneously spamming both routers before the network broadcasts propagate.
+
 ## July 18, 2026
 
 **feat: peer heartbeat and dead peer detection**
