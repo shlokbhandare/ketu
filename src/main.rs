@@ -7,7 +7,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use clap::Parser;
 use std::{collections::HashMap, sync::{Arc, Mutex}};
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex as TokioMutex, RwLock};
 use std::time::Duration;
 mod backend;
 mod ollama;
@@ -65,12 +65,19 @@ struct RateSync {
     increment: u32,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+enum NodeRole {
+    Leader,
+    Follower,
+}
+
 #[derive(Clone)]
 struct AppState {
     backend_pool: Arc<BackendPool>,
     request_counts: Arc<Mutex<HashMap<String, (u32, std::time::Instant)>>>,
     peer_state: Arc<RwLock<Option<(String, std::time::Instant)>>>,
     backend_health: Arc<RwLock<HashMap<String, bool>>>,
+    role: Arc<TokioMutex<NodeRole>>,
     http_client: reqwest::Client,
 }
 
@@ -278,6 +285,16 @@ async fn main() {
     let backend_pool = Arc::new(BackendPool::new(config.backends, backend_health.clone()));
     let request_counts = Arc::new(Mutex::new(HashMap::new()));
     let peer_state: Arc<RwLock<Option<(String, std::time::Instant)>>> = Arc::new(RwLock::new(None));
+    let role = Arc::new(TokioMutex::new(if args.peer.is_some() {
+        NodeRole::Follower
+    } else {
+        NodeRole::Leader
+    }));
+    let initial_role = match *role.lock().await {
+        NodeRole::Leader => "Leader",
+        NodeRole::Follower => "Follower",
+    };
+    println!("Starting as {}", initial_role);
     let http_client = reqwest::Client::builder()
     .timeout(std::time::Duration::from_secs(2))
     .build()
@@ -287,14 +304,17 @@ async fn main() {
         request_counts: request_counts.clone(),
         peer_state: peer_state.clone(),
         backend_health: backend_health.clone(),
+        role: role.clone(),
         http_client: http_client.clone(),
     };
 
     if let Some(addr) = args.peer {
         let peer = addr.clone();
         let peer_state_clone = peer_state.clone();
+        let role_for_monitor = role.clone();
         tokio::spawn(async move {
             let client = reqwest::Client::new();
+            let mut missed_heartbeats = 0u32;
 
             loop {
                 tokio::time::sleep(Duration::from_secs(10)).await;
@@ -302,6 +322,7 @@ async fn main() {
                 let url = format!("http://{}/health", peer);
                 match client.get(&url).send().await {
                     Ok(resp) if resp.status().is_success() => {
+                        missed_heartbeats = 0;
                         let mut w = peer_state_clone.write().await;
                         let was_connected = w.is_some();
                         *w = Some((peer.clone(), std::time::Instant::now()));
@@ -310,11 +331,21 @@ async fn main() {
                         }
                     }
                     Ok(_) | Err(_) => {
+                        missed_heartbeats += 1;
                         let mut w = peer_state_clone.write().await;
-                        if let Some((peer_url, last_seen)) = w.clone() {
-                            if last_seen.elapsed() > Duration::from_secs(30) {
-                                println!("peer lost: {}", peer_url);
+                        if missed_heartbeats >= 3 {
+                            let was_connected = w.is_some();
+                            if was_connected {
+                                println!("peer lost: {}", peer);
                                 *w = None;
+                            }
+
+                            if was_connected {
+                                let mut role = role_for_monitor.lock().await;
+                                if *role == NodeRole::Follower {
+                                    *role = NodeRole::Leader;
+                                    println!("leader lost, promoting self");
+                                }
                             }
                         }
                     }

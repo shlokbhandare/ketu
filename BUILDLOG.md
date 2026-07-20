@@ -1,6 +1,12 @@
 # Build Log
 
+
 ## July 20, 2026
+
+**feat: dynamic leader promotion on failure**
+Description:
+
+> A single point of failure is a critical joint in software that is so inseparable from the process that if it fails, the entire program collapses. Yes, I just eliminated one, if the static leader dies, the follower now dynamically promotes itself to keep the cluster alive.
 
 **feat: split-brain fallback and client timeout**
 Description:
