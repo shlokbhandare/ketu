@@ -18,7 +18,15 @@ async fn health() -> &'static str {
     "ok"
 }
 
-#[derive(Deserialize)]
+fn is_forwarded_header(headers: &HeaderMap) -> bool {
+    headers
+        .get("x-ketu-forwarded")
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
+}
+
+#[derive(Deserialize, Serialize)]
 struct RouteRequest {
     model: String,
     prompt: String,
@@ -40,7 +48,7 @@ struct Args {
     port: u16,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct RouteResponse {
     response: String,
 }
@@ -80,6 +88,7 @@ async fn route(
         .filter(|value| !value.is_empty())
         .unwrap_or("unknown")
         .to_string();
+    let is_forwarded = is_forwarded_header(&headers);
 
     let now = std::time::Instant::now();
     let count = {
@@ -115,6 +124,8 @@ async fn route(
     if count > 10 {
         return Err(StatusCode::TOO_MANY_REQUESTS);
     }
+
+    let forwarded_payload = serde_json::to_value(&payload).expect("route payload should serialize");
 
     let mut backend = state.backend_pool.next().await;
 
@@ -182,7 +193,42 @@ async fn route(
         }
     }
 
-    Err(StatusCode::INTERNAL_SERVER_ERROR)
+    if !is_forwarded {
+        if let Some(peer_url) = state.peer_state.read().await.as_ref().map(|(peer_url, _)| peer_url.clone()) {
+            let mut req_headers = reqwest::header::HeaderMap::new();
+            req_headers.insert("x-ketu-forwarded", reqwest::header::HeaderValue::from_static("true"));
+
+            let peer_client = reqwest::Client::builder()
+                .timeout(Duration::from_secs(15))
+                .build()
+                .map_err(|_| StatusCode::BAD_GATEWAY)?;
+
+            match peer_client
+                .post(format!("http://{}/route", peer_url))
+                .headers(req_headers)
+                .json(&forwarded_payload)
+                .send()
+                .await
+            {
+                Ok(response) if response.status().is_success() => {
+                    let peer_response = response
+                        .json::<RouteResponse>()
+                        .await
+                        .map_err(|_| StatusCode::BAD_GATEWAY)?;
+                    return Ok(Json(peer_response));
+                }
+                Ok(_) | Err(_) => {
+                    return Err(StatusCode::BAD_GATEWAY);
+                }
+            }
+        }
+    }
+
+    if is_forwarded {
+        Err(StatusCode::BAD_GATEWAY)
+    } else {
+        Err(StatusCode::INTERNAL_SERVER_ERROR)
+    }
 }
 
 #[axum::debug_handler]
@@ -294,5 +340,24 @@ async fn main() {
     axum::serve(listener, app)
         .await
         .expect("server failed");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn forwarded_header_is_detected() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-ketu-forwarded", "true".parse().unwrap());
+        assert!(is_forwarded_header(&headers));
+    }
+
+    #[test]
+    fn forwarded_header_is_case_insensitive() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-ketu-forwarded", "TRUE".parse().unwrap());
+        assert!(is_forwarded_header(&headers));
+    }
 }
 
