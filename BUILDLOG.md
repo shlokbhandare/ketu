@@ -1,7 +1,11 @@
 # Build Log
 
-
 ## July 20, 2026
+
+**feat: split-brain fallback and client timeout**
+Description:
+
+> Split-brain occurs when the network link between nodes drops, but both stay online and process traffic independently, causing data divergence (e.g., allowing 20 total requests instead of 10). By relying on local enforcement and adding a 2-second timeout to the HTTP client, we chose AP (Availability and Partition Tolerance) from the CAP theorem, sacrificing perfect Consistency to keep the routers from hanging or crashing.## July 20, 2026
 
 **feat: distributed rate limiting across instances**
 Description:

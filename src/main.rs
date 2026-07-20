@@ -232,7 +232,10 @@ async fn main() {
     let backend_pool = Arc::new(BackendPool::new(config.backends, backend_health.clone()));
     let request_counts = Arc::new(Mutex::new(HashMap::new()));
     let peer_state: Arc<RwLock<Option<(String, std::time::Instant)>>> = Arc::new(RwLock::new(None));
-    let http_client = reqwest::Client::new();
+    let http_client = reqwest::Client::builder()
+    .timeout(std::time::Duration::from_secs(2))
+    .build()
+    .unwrap();
     let app_state = AppState {
         backend_pool: backend_pool.clone(),
         request_counts: request_counts.clone(),
