@@ -61,7 +61,7 @@ I (Shlok) am the Architect, assisted by Claude as a mentor, designing every comp
 │  :11434 │           │  :11435 │               │  :11434 │           │  :11435 │
 └─────────┘           └─────────┘               └─────────┘           └─────────┘
 ```
-```markdown
+
 ## Distributed Architecture & Design Decisions
 
 In Phase 2, Ketu evolved from a single-instance gateway into a self-healing distributed cluster. Running multiple router instances introduces challenges around coordination, split-brain scenarios, and infinite forwarding loops. Below is how Ketu addresses these challenges:
