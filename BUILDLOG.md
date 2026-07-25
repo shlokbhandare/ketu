@@ -7,6 +7,8 @@ Description:
 
 > Latency increased by ~2 seconds because losing a backend mid-test forced the surviving backend to handle double the load. However, the system became infinitely more resilient—the error rate dropped to 0.00% because the cross-node failover caught every single request destined for the dead backend.
 
+> Compared to Phase 1's single-instance benchmark, distributed latency increased from ~7.5s to 9.5s because losing a backend mid-test forced the survivor to handle double the load. However, resilience drastically improved—the error rate dropped from 15% to 0.00% because cross-node failover successfully caught every dropped request.
+
 ## July 20, 2026
 
 **feat: dynamic leader promotion on failure**
