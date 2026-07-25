@@ -44,6 +44,47 @@ I (Shlok) am the Architect, assisted by Claude as a mentor, designing every comp
 │      Response       │──► Client
 └─────────────────────┘
 ```
+## Multi-Node Cluster Architecture (Phase 2)
+
+```text
+┌──────────────────────────────┐                ┌──────────────────────────────┐
+│           Router A           │  Heartbeats    │           Router B           │
+│     (Leader / Port 3000)     │◄──────────────►│    (Follower / Port 3001)    │
+│                              │   Rate Limits  │                              │
+└──────────────┬───────────────┘                └──────────────┬───────────────┘
+               │                                               │
+    ┌──────────┴──────────┐                         ┌──────────┴──────────┐
+    │                     │                         │                     │
+    ▼                     ▼                         ▼                     ▼
+┌─────────┐           ┌─────────┐               ┌─────────┐           ┌─────────┐
+│ Ollama1 │           │ Ollama2 │               │ Ollama1 │           │ Ollama2 │
+│  :11434 │           │  :11435 │               │  :11434 │           │  :11435 │
+└─────────┘           └─────────┘               └─────────┘           └─────────┘
+```
+```markdown
+## Distributed Architecture & Design Decisions
+
+In Phase 2, Ketu evolved from a single-instance gateway into a self-healing distributed cluster. Running multiple router instances introduces challenges around coordination, split-brain scenarios, and infinite forwarding loops. Below is how Ketu addresses these challenges:
+
+### 1. Peer Discovery & Heartbeat Monitoring
+- **Mechanism:** Nodes accept a `--peer` CLI flag on startup to discover and pair with an existing cluster member.
+- **Dead Peer Detection:** Nodes exchange background HTTP heartbeats every 10 seconds. If 3 consecutive heartbeats are missed (30 seconds), the peer is marked as dead, preventing routing requests to an unresponsive node.
+
+### 2. Distributed Rate Limiting (AP Architecture)
+- **Mechanism:** When Router A receives a request, it increments its local IP counter and fires an asynchronous background broadcast to sync the count with Router B.
+- **Tradeoff (Eventual Consistency):** Ketu prioritizes Availability and Partition Tolerance (AP) over strict consistency. Syncing rate limits is non-blocking (fire and forget), ensuring zero latency penalty on client requests while maintaining eventual consistency across nodes.
+
+### 3. Split-Brain Fallback
+- **Mechanism:** If the network link between peers drops, each router automatically degrades to independent local enforcement. Rather than failing or blocking traffic, both nodes enforce rate limits (10 req/min) on their local view until connection is restored.
+
+### 4. Cross-Node Failover & Loop Prevention
+- **Mechanism:** If all local backends configured on Router A fail or time out, Router A attempts a cross-node failover by forwarding the request to Router B.
+- **Loop Prevention:** To prevent infinite routing loops ("ping-ponging" between nodes when all cluster backends are down), Router A injects an `x-ketu-forwarded: true` header into the request. If Router B receives a request with this header and its own local backends also fail, it terminates the chain immediately and returns an HTTP error.
+
+### 5. Dynamic Leader Promotion
+- **Mechanism:** On startup, a node launched without a `--peer` flag assumes the `Leader` role, while nodes joining via `--peer` start as `Follower`s.
+- **Self-Healing:** If the active Leader dies, the Follower's heartbeat monitor detects the loss after 3 missed pings and autonomously promotes itself to Leader (`leader lost, promoting self`), eliminating a single point of failure for cluster-wide background tasks.
+
 
 ## How to Run It
 
@@ -95,6 +136,17 @@ Using Bruno, curl, or any HTTP client, send a `POST` request to `http://localhos
 ```
 A successful response returns the model's generated output as JSON.
 
+**6. Run a Multi-Node Cluster (Phase 2)**
+
+Start the first node (Leader):
+```bash
+cargo run -- --port 3000
+```
+In a second terminal, start the peer node (Follower):
+```bash 
+cargo run -- --port 3001 --peer 127.0.0.1:3000
+```
+
 ## Endpoints
 
 ### `GET /health`
@@ -129,6 +181,10 @@ Returns a JSON object mapping each backend URL to its cumulative token count:
 }
 ```
 Latency is tracked and logged per-request to the terminal but not currently exposed via this endpoint.
+
+### `x-ketu-forwarded` 
+Internal header attached automatically during cross-node failover to prevent infinite loops between peer nodes.
+
 
 ## Known Limitations
 
