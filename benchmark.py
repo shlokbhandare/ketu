@@ -1,5 +1,6 @@
 import csv
 import json
+import random
 import statistics
 import time
 import urllib.error
@@ -7,13 +8,13 @@ import urllib.request
 from pathlib import Path
 from typing import List, Dict, Any
 
-DEFAULT_URL = "http://localhost:3000/route"
+DEFAULT_URLS = ["http://localhost:3000/route", "http://localhost:3001/route"]
 DEFAULT_OUTPUT = "benchmark_results.csv"
-TOTAL_REQUESTS = 100
+TOTAL_REQUESTS = 200
 BURST_START = 45
 BURST_COUNT = 15
 REGULAR_DELAY_SECONDS = 0.05
-REQUEST_TIMEOUT_SECONDS = 15
+REQUEST_TIMEOUT_SECONDS = 45
 
 SHORT_PROMPTS = [
     "hello",
@@ -85,7 +86,7 @@ def write_results(results: List[Dict[str, Any]], output_path: str) -> None:
     with output.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
             handle,
-            fieldnames=["index", "status_code", "latency_ms", "response_length", "prompt_type", "prompt"],
+            fieldnames=["index", "status_code", "latency_ms", "response_length", "prompt_type", "url", "prompt"],
         )
         writer.writeheader()
         for idx, row in enumerate(results):
@@ -98,7 +99,7 @@ def summarize(results: List[Dict[str, Any]]) -> None:
         return
 
     two_hundred_status = [row for row in results if row["status_code"] == 200]
-    non_two_hundred = [row for row in results if row["status_code"] != 200]
+    non_two_hundred = [row for row in results if row["status_code"] != 200]  
 
     if two_hundred_status:
         avg_latency = statistics.mean(row["latency_ms"] for row in two_hundred_status)
@@ -120,25 +121,27 @@ def summarize(results: List[Dict[str, Any]]) -> None:
 
 
 def main() -> None:
-    url = DEFAULT_URL
     output_path = DEFAULT_OUTPUT
-    print(f"Sending {TOTAL_REQUESTS} requests to {url}")
+    print(f"Sending {TOTAL_REQUESTS} requests across {DEFAULT_URLS}")
     print(f"Results will be saved to {output_path}")
 
     results: List[Dict[str, Any]] = []
     for idx in range(TOTAL_REQUESTS):
         prompt = pick_prompt(idx)
+        url = random.choice(DEFAULT_URLS)
 
         if BURST_START <= idx < BURST_START + BURST_COUNT:
             if idx == BURST_START:
                 print("Starting burst of rapid requests...")
             result = send_request(url, prompt)
             result["index"] = idx + 1
+            result["url"] = url
             results.append(result)
             continue
 
         result = send_request(url, prompt)
         result["index"] = idx + 1
+        result["url"] = url
         results.append(result)
         if idx < TOTAL_REQUESTS - 1:
             time.sleep(REGULAR_DELAY_SECONDS)

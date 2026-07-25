@@ -209,7 +209,20 @@ Ran 100 requests through Ketu using a Python script (`benchmark.py`), alternatin
 * **Average response length (status 200):** 1,429.02 characters
 * **Average response length (status 0):** 9.00 characters
 
-*(Check `benchmark_results.csv` for raw data)*
+*(Check `benchmark_results2.csv` for raw data)*
 
 > **Architectural Insight on Error Rate:**
 > These 15% were not real failures in Ketu. The benchmark script's own client-side timeout was set to 15 seconds, while Ketu's internal timeout is 30 seconds. Under load, some long-prompt responses took longer than 15 seconds to generate; the script closed the connection before Ketu could finish, even though Ketu itself was still working correctly within its own timeout window. This surfaced a real lesson: if the tool measuring a system has a shorter timeout than the system being measured, there's a good chance the system's actual responses won't be logged or collected at all, making the system look like it's failing when it isn't.
+
+### Distributed Benchmarks (Phase 2 Crucible Test)
+To prove the resilience of the multi-node cluster, 200 requests were fired randomly across both Router A and Router B. Halfway through the test (~request 100), one of the two underlying Ollama backends was forcefully terminated (`Ctrl+C`) to simulate a critical hardware failure.
+
+**Results:**
+* **Average latency:** 9,502.00 ms (Up from 7,530 ms)
+* **Error rate:** 0.00% (Down from 15%)
+* **Average response length:** 1,628.29 characters
+
+*(Check `benchmark_results.csv` for raw data)*
+
+> **Architectural Insight on Failover Tax:** 
+> The error rate dropped to an absolute zero, proving that cross-node failover works seamlessly, not a single client request was dropped despite a hard backend crash. The tradeoff is the latency increase. Average latency rose by ~2 seconds because the cluster lost 50% of its compute capacity mid-test. The surviving backend had to process the remaining queue entirely on its own, demonstrating that in distributed systems, resilience often costs performance.

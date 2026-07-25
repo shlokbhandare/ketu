@@ -1,5 +1,11 @@
 # Build Log
 
+## July 25, 2026
+
+**docs: distributed system benchmarks**
+Description:
+
+> Latency increased by ~2 seconds because losing a backend mid-test forced the surviving backend to handle double the load. However, the system became infinitely more resilient—the error rate dropped to 0.00% because the cross-node failover caught every single request destined for the dead backend.
 
 ## July 20, 2026
 

@@ -1,0 +1,101 @@
+index,status_code,latency_ms,response_length,prompt_type,prompt
+1,200,7512.46,49,short,hello
+2,200,14125.65,4193,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+3,200,3878.29,178,short,test run
+4,200,10095.53,2814,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+5,200,7828.23,1474,short,json body
+6,200,7647.08,1830,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+7,200,4238.76,307,short,ai status
+8,200,9233.76,2529,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+9,200,3249.12,25,short,quick ping
+10,200,8788.49,2278,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+11,200,3404.51,49,short,hello
+12,200,11785.63,3427,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+13,200,3996.97,169,short,test run
+14,200,11447.48,2980,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+15,200,8710.32,1692,short,json body
+16,200,12975.32,3549,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+17,200,4177.13,307,short,ai status
+18,200,9984.22,2714,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+19,200,3377.63,42,short,quick ping
+20,200,9835.0,2524,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+21,200,3236.18,49,short,hello
+22,200,12528.43,3689,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+23,200,3805.37,154,short,test run
+24,200,10319.64,2897,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+25,200,11775.6,2713,short,json body
+26,200,8940.92,2100,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+27,200,3715.23,118,short,ai status
+28,200,9283.4,2396,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+29,200,3320.6,19,short,quick ping
+30,200,10294.87,2755,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+31,200,3781.07,111,short,hello
+32,200,12521.35,3590,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+33,200,3814.7,138,short,test run
+34,200,10298.91,2957,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+35,200,8580.96,1766,short,json body
+36,200,7590.47,1739,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+37,200,4159.11,307,short,ai status
+38,200,9374.12,2525,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+39,200,3162.52,19,short,quick ping
+40,200,12175.78,3325,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+41,200,3412.43,49,short,hello
+42,200,11491.55,3333,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+43,200,3779.38,161,short,test run
+44,200,12044.3,3700,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+45,200,8966.45,1842,short,json body
+46,200,7207.9,1502,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+47,200,4447.57,307,short,ai status
+48,200,8325.15,2097,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+49,200,3377.59,45,short,quick ping
+50,200,11806.81,3521,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+51,200,3674.17,110,short,hello
+52,200,10659.29,2915,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+53,200,3724.49,136,short,test run
+54,200,11826.01,3272,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+55,200,9839.5,2137,short,json body
+56,200,8681.74,2114,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+57,200,4198.26,307,short,ai status
+58,200,8438.92,2109,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+59,200,3184.77,19,short,quick ping
+60,200,11567.68,3364,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+61,200,3363.88,49,short,hello
+62,200,10190.18,2582,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+63,200,3882.4,163,short,test run
+64,200,13142.52,4136,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+65,200,8525.61,1710,short,json body
+66,200,11897.7,3228,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+67,200,4172.96,307,short,ai status
+68,200,7561.47,1768,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+69,200,3229.32,19,short,quick ping
+70,200,11653.81,3265,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+71,200,16911.35,49,short,hello
+72,0,17060.36,9,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+73,200,4792.56,142,short,test run
+74,0,17056.03,9,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+75,200,5310.47,214,short,json body
+76,0,17060.25,9,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+77,200,7488.31,458,short,ai status
+78,0,17065.2,9,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+79,200,3386.13,20,short,quick ping
+80,0,17037.59,9,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+81,200,4531.44,130,short,hello
+82,0,17049.83,9,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+83,200,6505.81,318,short,test run
+84,0,17060.28,9,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+85,200,7550.37,437,short,json body
+86,0,17070.92,9,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+87,200,7049.45,394,short,ai status
+88,0,17079.61,9,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+89,200,3400.45,20,short,quick ping
+90,0,17053.66,9,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+91,200,4424.42,140,short,hello
+92,0,17070.56,9,long,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+93,200,5380.81,201,short,test run
+94,0,17056.28,9,long,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+95,0,17048.33,9,short,json body
+96,200,16037.49,1701,long,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+97,200,6736.01,459,short,ai status
+98,0,17043.62,9,long,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+99,200,3366.13,20,short,quick ping
+100,0,17080.51,9,long,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
