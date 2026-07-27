@@ -1,0 +1,201 @@
+index,status_code,latency_ms,response_length,prompt_type,url,prompt
+1,200,3678.0,49,short,http://localhost:3001/route,hello
+2,200,12384.06,3484,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+3,200,3950.61,170,short,http://localhost:3001/route,test run
+4,200,10782.48,3205,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+5,200,21522.8,289,short,http://localhost:3001/route,json body
+6,200,17297.24,1639,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+7,200,8906.19,364,short,http://localhost:3001/route,ai status
+8,200,30902.08,3386,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+9,200,5351.72,42,short,http://localhost:3000/route,quick ping
+10,200,8966.08,2376,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+11,200,7977.09,139,short,http://localhost:3001/route,hello
+12,200,41756.63,3355,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+13,200,3474.33,186,short,http://localhost:3001/route,test run
+14,200,15886.61,5527,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+15,200,9000.78,1987,short,http://localhost:3001/route,json body
+16,200,10460.05,2724,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+17,200,3417.39,118,short,http://localhost:3000/route,ai status
+18,200,8127.8,2222,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+19,200,3665.39,145,short,http://localhost:3001/route,quick ping
+20,200,10322.71,2919,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+21,200,3241.07,49,short,http://localhost:3001/route,hello
+22,200,10199.09,2864,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+23,200,3155.05,83,short,http://localhost:3000/route,test run
+24,200,10243.79,3077,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+25,200,10746.28,2373,short,http://localhost:3001/route,json body
+26,200,6846.5,1437,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+27,200,3803.91,307,short,http://localhost:3001/route,ai status
+28,200,9365.63,2635,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+29,200,3201.57,19,short,http://localhost:3001/route,quick ping
+30,200,10662.19,3002,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+31,200,3448.78,49,short,http://localhost:3001/route,hello
+32,200,11388.08,3291,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+33,200,3657.15,126,short,http://localhost:3001/route,test run
+34,200,7983.4,2075,long,http://localhost:3000/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+35,200,9438.07,1875,short,http://localhost:3001/route,json body
+36,200,12678.44,3373,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+37,200,11127.17,433,short,http://localhost:3001/route,ai status
+38,200,39315.66,2530,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+39,200,6865.26,20,short,http://localhost:3001/route,quick ping
+40,200,12640.37,3557,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+41,200,3326.19,49,short,http://localhost:3000/route,hello
+42,200,10522.69,2953,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+43,200,4043.39,214,short,http://localhost:3000/route,test run
+44,200,9119.3,2592,long,http://localhost:3000/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+45,200,9900.14,2154,short,http://localhost:3000/route,json body
+46,200,8469.27,2146,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+47,200,9937.85,450,short,http://localhost:3001/route,ai status
+48,200,10163.99,2585,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+49,200,3443.94,114,short,http://localhost:3001/route,quick ping
+50,200,10305.69,2867,long,http://localhost:3001/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+51,200,3296.47,49,short,http://localhost:3001/route,hello
+52,200,10696.34,3060,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+53,200,3764.62,177,short,http://localhost:3001/route,test run
+54,200,10007.33,2894,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+55,200,11953.58,2640,short,http://localhost:3000/route,json body
+56,200,11332.73,3206,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+57,200,3428.47,118,short,http://localhost:3001/route,ai status
+58,200,9001.62,2535,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+59,200,3374.21,110,short,http://localhost:3000/route,quick ping
+60,200,9607.55,2573,long,http://localhost:3001/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+61,200,3598.06,110,short,http://localhost:3000/route,hello
+62,200,11226.64,3324,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+63,200,3401.53,83,short,http://localhost:3001/route,test run
+64,200,10314.47,3044,long,http://localhost:3000/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+65,200,9470.44,2221,short,http://localhost:3000/route,json body
+66,200,9064.88,2481,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+67,200,4207.15,307,short,http://localhost:3000/route,ai status
+68,200,7998.22,2091,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+69,200,3148.43,25,short,http://localhost:3000/route,quick ping
+70,200,10649.77,2843,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+71,200,3214.38,49,short,http://localhost:3001/route,hello
+72,200,11322.33,3390,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+73,200,9441.21,288,short,http://localhost:3001/route,test run
+74,200,31258.38,3529,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+75,200,11281.94,2160,short,http://localhost:3001/route,json body
+76,200,16683.0,1504,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+77,200,4467.23,307,short,http://localhost:3000/route,ai status
+78,200,38513.43,2110,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+79,200,3329.71,60,short,http://localhost:3000/route,quick ping
+80,200,10589.29,2936,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+81,200,6513.64,49,short,http://localhost:3001/route,hello
+82,200,11893.0,3294,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+83,200,3764.35,199,short,http://localhost:3001/route,test run
+84,200,10092.12,2935,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+85,200,7661.28,1422,short,http://localhost:3000/route,json body
+86,200,9391.8,2468,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+87,200,3487.41,118,short,http://localhost:3001/route,ai status
+88,200,9745.64,2846,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+89,200,3021.8,41,short,http://localhost:3000/route,quick ping
+90,200,10448.1,3073,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+91,200,3218.41,49,short,http://localhost:3000/route,hello
+92,200,10783.09,3184,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+93,200,3630.72,167,short,http://localhost:3001/route,test run
+94,200,9655.24,2809,long,http://localhost:3000/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+95,200,10460.6,2171,short,http://localhost:3000/route,json body
+96,200,7760.11,1942,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+97,200,3976.77,307,short,http://localhost:3001/route,ai status
+98,200,10024.29,2942,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+99,200,3212.49,36,short,http://localhost:3001/route,quick ping
+100,200,8731.97,2291,long,http://localhost:3001/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+101,200,3266.22,49,short,http://localhost:3001/route,hello
+102,200,12423.44,3878,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+103,200,3538.02,152,short,http://localhost:3000/route,test run
+104,200,8737.02,2413,long,http://localhost:3000/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+105,200,8876.56,1852,short,http://localhost:3001/route,json body
+106,200,11785.99,1598,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+107,200,4056.92,307,short,http://localhost:3000/route,ai status
+108,200,8655.92,2359,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+109,200,3010.5,19,short,http://localhost:3000/route,quick ping
+110,200,10032.03,2812,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+111,200,8417.0,111,short,http://localhost:3001/route,hello
+112,200,9564.64,2609,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+113,200,3481.77,131,short,http://localhost:3001/route,test run
+114,200,11213.62,3489,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+115,200,13134.18,1752,short,http://localhost:3001/route,json body
+116,200,11334.74,3246,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+117,200,3527.29,118,short,http://localhost:3000/route,ai status
+118,200,9677.05,2776,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+119,200,3176.51,45,short,http://localhost:3001/route,quick ping
+120,200,9664.35,2752,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+121,200,3250.81,49,short,http://localhost:3001/route,hello
+122,200,16983.74,5304,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+123,200,8774.46,260,short,http://localhost:3001/route,test run
+124,200,10721.02,3341,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+125,200,13008.77,1603,short,http://localhost:3001/route,json body
+126,200,12281.27,1856,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+127,200,4064.96,307,short,http://localhost:3000/route,ai status
+128,200,13774.8,2470,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+129,200,3266.43,25,short,http://localhost:3000/route,quick ping
+130,200,12272.14,2764,long,http://localhost:3001/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+131,200,3693.52,49,short,http://localhost:3000/route,hello
+132,200,12218.82,3254,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+133,200,3329.38,83,short,http://localhost:3000/route,test run
+134,200,17657.86,3697,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+135,200,13635.84,1829,short,http://localhost:3001/route,json body
+136,200,12072.41,1681,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+137,200,8399.15,118,short,http://localhost:3001/route,ai status
+138,200,8285.02,2323,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+139,200,3463.55,134,short,http://localhost:3001/route,quick ping
+140,200,9764.73,2767,long,http://localhost:3001/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+141,200,8106.6,49,short,http://localhost:3001/route,hello
+142,200,10397.31,2897,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+143,200,3736.68,214,short,http://localhost:3000/route,test run
+144,200,14208.24,2637,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+145,200,9435.76,1910,short,http://localhost:3000/route,json body
+146,200,14269.29,2577,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+147,200,4018.28,307,short,http://localhost:3000/route,ai status
+148,200,14390.59,2706,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+149,200,3055.51,20,short,http://localhost:3000/route,quick ping
+150,200,17042.62,3553,long,http://localhost:3001/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+151,200,8121.83,49,short,http://localhost:3001/route,hello
+152,200,11200.72,3134,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+153,200,3796.11,167,short,http://localhost:3000/route,test run
+154,200,15919.94,3098,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+155,200,8571.44,1720,short,http://localhost:3000/route,json body
+156,200,106639.17,2770,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+157,200,3451.48,118,short,http://localhost:3001/route,ai status
+158,200,9750.06,2806,long,http://localhost:3001/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+159,200,8331.16,28,short,http://localhost:3001/route,quick ping
+160,200,10492.36,2966,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+161,200,3541.29,110,short,http://localhost:3001/route,hello
+162,200,10775.16,3061,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+163,200,3578.13,174,short,http://localhost:3001/route,test run
+164,200,14632.76,2850,long,http://localhost:3000/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+165,200,10197.52,2272,short,http://localhost:3001/route,json body
+166,200,6368.91,1404,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+167,200,3942.12,307,short,http://localhost:3001/route,ai status
+168,200,8393.02,2252,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+169,200,3146.35,32,short,http://localhost:3001/route,quick ping
+170,200,11362.18,3406,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+171,200,3304.34,49,short,http://localhost:3000/route,hello
+172,200,10121.66,2833,long,http://localhost:3001/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+173,200,4002.08,232,short,http://localhost:3000/route,test run
+174,200,9358.56,2721,long,http://localhost:3000/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+175,200,8240.95,1765,short,http://localhost:3000/route,json body
+176,200,6447.24,1460,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+177,200,4082.04,307,short,http://localhost:3000/route,ai status
+178,200,9210.87,2647,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+179,200,8186.45,45,short,http://localhost:3001/route,quick ping
+180,200,8864.46,2384,long,http://localhost:3000/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+181,200,8258.79,49,short,http://localhost:3001/route,hello
+182,200,10244.83,2955,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+183,200,3490.87,83,short,http://localhost:3001/route,test run
+184,200,10891.8,3307,long,http://localhost:3001/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+185,200,9539.07,1956,short,http://localhost:3000/route,json body
+186,200,10531.46,1080,long,http://localhost:3001/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+187,200,8395.96,118,short,http://localhost:3001/route,ai status
+188,200,9203.77,2474,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+189,200,7963.1,19,short,http://localhost:3001/route,quick ping
+190,200,15301.07,3095,long,http://localhost:3001/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."
+191,200,3312.85,49,short,http://localhost:3000/route,hello
+192,200,10845.35,3171,long,http://localhost:3000/route,"Describe the tradeoffs between simple round robin scheduling and weighted routing when one backend is faster but less reliable than another, especially in a request-per-minute limited environment."
+193,200,3698.12,134,short,http://localhost:3000/route,test run
+194,200,8860.97,2455,long,http://localhost:3000/route,Imagine a small orchestration service receiving mixed short and long user requests and discuss how prompt complexity can affect both token usage and response generation time in practice.
+195,200,12966.54,1472,short,http://localhost:3001/route,json body
+196,200,6914.75,1596,long,http://localhost:3000/route,Write a concise explanation of how a small local API router can balance traffic across multiple backend services while keeping latency predictable under bursty load.
+197,200,8916.23,307,short,http://localhost:3001/route,ai status
+198,200,8334.07,2216,long,http://localhost:3000/route,"Explain why alternating prompt lengths during a benchmark can reduce the chance that repeated content causes misleading performance results, and how this helps surface rate limiting behavior more clearly."
+199,200,3162.64,42,short,http://localhost:3000/route,quick ping
+200,200,14198.77,2469,long,http://localhost:3001/route,"Provide a short analysis of the relationship between burst traffic, rate limiting, and observable error rates when many requests arrive within a very short window."

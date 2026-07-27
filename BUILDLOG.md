@@ -1,5 +1,13 @@
 # Build Log
 
+
+## July 27, 2026
+
+**fix: rate limit sweep, peer sync guard, reqwest reuse, test coverage, dead code removal**
+Description:
+
+> Technical debt cleanup before Phase 3. Moved the O(N) HashMap cleanup to a background tokio task, prevented orphaned task leaks by guarding peer syncs, reused reqwest clients to preserve connection pooling during failovers, and enforced 'fail fast' memory allocation for rate-limited requests.
+
 ## July 25, 2026
 
 **docs: distributed system benchmarks**

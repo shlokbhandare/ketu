@@ -75,7 +75,7 @@ enum NodeRole {
 struct AppState {
     backend_pool: Arc<BackendPool>,
     request_counts: Arc<Mutex<HashMap<String, (u32, std::time::Instant)>>>,
-    peer_state: Arc<RwLock<Option<(String, std::time::Instant)>>>,
+    peer_state: Arc<RwLock<Option<String>>>,
     backend_health: Arc<RwLock<HashMap<String, bool>>>,
     role: Arc<TokioMutex<NodeRole>>,
     http_client: reqwest::Client,
@@ -100,32 +100,29 @@ async fn route(
     let now = std::time::Instant::now();
     let count = {
         let mut counts = state.request_counts.lock().unwrap();
-        counts.retain(|_, (_, timestamp)| now.duration_since(*timestamp).as_secs() < 60);
 
         let entry = counts.entry(ip.clone()).or_insert((0, now));
-        if now.duration_since(entry.1).as_secs() >= 60 {
-            entry.0 = 0;
-            entry.1 = now;
-        }
         entry.0 += 1;
         println!("IP {} has made {} requests", ip, entry.0);
         entry.0
     };
 
-    if let Some((peer_url, _)) = state.peer_state.read().await.as_ref().cloned() {
-        let http_client = state.http_client.clone();
-        let ip_for_sync = ip.clone();
-        tokio::spawn(async move {
-            let payload = serde_json::json!({
-                "ip": ip_for_sync,
-                "increment": 1u32,
+    if state.peer_state.read().await.is_some() {
+        if let Some(peer_url) = state.peer_state.read().await.as_ref().cloned() {
+            let http_client = state.http_client.clone();
+            let ip_for_sync = ip.clone();
+            tokio::spawn(async move {
+                let payload = serde_json::json!({
+                    "ip": ip_for_sync,
+                    "increment": 1u32,
+                });
+                let _ = http_client
+                    .post(format!("http://{}/peer/rate-sync", peer_url))
+                    .json(&payload)
+                    .send()
+                    .await;
             });
-            let _ = http_client
-                .post(format!("http://{}/peer/rate-sync", peer_url))
-                .json(&payload)
-                .send()
-                .await;
-        });
+        }
     }
 
     if count > 10 {
@@ -158,7 +155,7 @@ async fn route(
                         health.insert(backend_url.clone(), true);
                     }
 
-                    if let Some((peer, _)) = state.peer_state.read().await.as_ref().cloned() {
+                    if let Some(peer) = state.peer_state.read().await.as_ref().cloned() {
                         let backend_url = backend.url.clone();
                         let http_client = state.http_client.clone();
                         let backend_health = state.backend_health.clone();
@@ -201,16 +198,13 @@ async fn route(
     }
 
     if !is_forwarded {
-        if let Some(peer_url) = state.peer_state.read().await.as_ref().map(|(peer_url, _)| peer_url.clone()) {
+        if let Some(peer_url) = state.peer_state.read().await.as_ref().cloned() {
             let mut req_headers = reqwest::header::HeaderMap::new();
             req_headers.insert("x-ketu-forwarded", reqwest::header::HeaderValue::from_static("true"));
 
-            let peer_client = reqwest::Client::builder()
-                .timeout(Duration::from_secs(15))
-                .build()
-                .map_err(|_| StatusCode::BAD_GATEWAY)?;
+            let client = state.http_client.clone();
 
-            match peer_client
+            match client
                 .post(format!("http://{}/route", peer_url))
                 .headers(req_headers)
                 .json(&forwarded_payload)
@@ -284,7 +278,7 @@ async fn main() {
     let backend_health: Arc<RwLock<HashMap<String, bool>>> = Arc::new(RwLock::new(HashMap::new()));
     let backend_pool = Arc::new(BackendPool::new(config.backends, backend_health.clone()));
     let request_counts = Arc::new(Mutex::new(HashMap::new()));
-    let peer_state: Arc<RwLock<Option<(String, std::time::Instant)>>> = Arc::new(RwLock::new(None));
+    let peer_state: Arc<RwLock<Option<String>>> = Arc::new(RwLock::new(None));
     let role = Arc::new(TokioMutex::new(if args.peer.is_some() {
         NodeRole::Follower
     } else {
@@ -325,7 +319,7 @@ async fn main() {
                         missed_heartbeats = 0;
                         let mut w = peer_state_clone.write().await;
                         let was_connected = w.is_some();
-                        *w = Some((peer.clone(), std::time::Instant::now()));
+                        *w = Some(peer.clone());
                         if !was_connected {
                             println!("peer connected: {}", peer);
                         }
@@ -353,6 +347,16 @@ async fn main() {
             }
         });
     }
+
+    let request_counts_for_cleanup = request_counts.clone();
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(Duration::from_secs(60)).await;
+            let now = std::time::Instant::now();
+            let mut counts = request_counts_for_cleanup.lock().unwrap();
+            counts.retain(|_, (_, timestamp)| now.duration_since(*timestamp).as_secs() < 60);
+        }
+    });
 
     let app = Router::new()
         .route("/health", get(health))
@@ -389,6 +393,26 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert("x-ketu-forwarded", "TRUE".parse().unwrap());
         assert!(is_forwarded_header(&headers));
+    }
+
+    #[test]
+    fn missing_forwarded_header_returns_false() {
+        let headers = HeaderMap::new();
+        assert!(!is_forwarded_header(&headers));
+    }
+
+    #[test]
+    fn non_true_forwarded_header_value_returns_false() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-ketu-forwarded", "yes".parse().unwrap());
+        assert!(!is_forwarded_header(&headers));
+    }
+
+    #[test]
+    fn numeric_forwarded_header_value_returns_false() {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-ketu-forwarded", "1".parse().unwrap());
+        assert!(!is_forwarded_header(&headers));
     }
 }
 
