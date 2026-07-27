@@ -1,7 +1,11 @@
 # Build Log
 
-
 ## July 27, 2026
+
+**feat: implement heuristic semantic routing engine**
+Description:
+
+> Replaced blind round-robin routing with an intelligent heuristic scoring engine (`analyzer.rs`). Ketu now evaluates prompt complexity in microseconds using keyword density, structural patterns, and string length. Simple prompts are routed to the Low-Latency backend (llama3.2:3b), while complex prompts (code/math) are automatically routed to the High-Capacity backend (qwen2.5:7b). Explicitly chose a CPU-bound heuristic model over vector embeddings to preserve the sub-millisecond latency requirements of an API Gateway.
 
 **fix: rate limit sweep, peer sync guard, reqwest reuse, test coverage, dead code removal**
 Description:

@@ -5,14 +5,17 @@ use axum::{
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use clap::Parser;
 use std::{collections::HashMap, sync::{Arc, Mutex}};
 use tokio::sync::{Mutex as TokioMutex, RwLock};
 use std::time::Duration;
+mod analyzer;
 mod backend;
 mod ollama;
 use axum::http::HeaderMap;
 use backend::{Backend, BackendPool};
+use tracing::info;
 
 async fn health() -> &'static str {
     "ok"
@@ -85,7 +88,7 @@ struct AppState {
 async fn route(
     State(state): State<AppState>,
     headers: HeaderMap,
-    Json(payload): Json<RouteRequest>,
+    Json(payload): Json<Value>,
 ) -> Result<Json<RouteResponse>, StatusCode> {
     let ip = headers
         .get("x-forwarded-for")
@@ -129,71 +132,47 @@ async fn route(
         return Err(StatusCode::TOO_MANY_REQUESTS);
     }
 
-    let forwarded_payload = serde_json::to_value(&payload).expect("route payload should serialize");
+    let extracted_text = payload
+        .get("prompt")
+        .and_then(|v| v.as_str())
+        .map(ToString::to_string)
+        .unwrap_or_else(|| serde_json::to_string(&payload).unwrap_or_default());
 
-    let mut backend = state.backend_pool.next().await;
+    let complexity = analyzer::classify(&extracted_text);
+    let target_url = match complexity {
+        analyzer::PromptComplexity::LowLatency => "http://localhost:11434",
+        analyzer::PromptComplexity::HighCapacity => "http://localhost:11435",
+    };
+    info!("Semantic routing: Classified as {:?} -> targeting {}", complexity, target_url);
 
-    for attempt in 1..=2 {
-        let start = std::time::Instant::now();
-        let result = tokio::time::timeout(
-            std::time::Duration::from_secs(30),
-            ollama::generate(&backend.url, &payload.prompt, &backend.model),
-        )
-        .await;
+    let model = payload
+        .get("model")
+        .and_then(|v| v.as_str())
+        .unwrap_or("default");
 
-        match result {
-            Ok(Ok(response)) => {
-                let token_count = (response.len() as u64) / 4;
-                state.backend_pool.record_tokens(&backend.url, token_count);
-                let elapsed_ms = start.elapsed().as_millis();
-                println!("Backend {} responded in {}ms", backend.url, elapsed_ms);
+    let forwarded_payload = payload.clone();
 
-                if elapsed_ms > 2000 {
-                    let backend_url = backend.url.clone();
-                    {
-                        let mut health = state.backend_health.write().await;
-                        health.insert(backend_url.clone(), true);
-                    }
+    let start = std::time::Instant::now();
+    let result = tokio::time::timeout(
+        std::time::Duration::from_secs(30),
+        ollama::generate(target_url, &extracted_text, model),
+    )
+    .await;
 
-                    if let Some(peer) = state.peer_state.read().await.as_ref().cloned() {
-                        let backend_url = backend.url.clone();
-                        let http_client = state.http_client.clone();
-                        let backend_health = state.backend_health.clone();
-                        let backend_url_for_payload = backend_url.clone();
-                        tokio::spawn(async move {
-                            let payload = serde_json::json!({
-                                "backend_url": backend_url_for_payload,
-                                "slow": true,
-                            });
-                            let _ = http_client
-                                .post(format!("http://{}/peer/health-update", peer))
-                                .json(&payload)
-                                .send()
-                                .await;
+    match result {
+        Ok(Ok(response)) => {
+            let token_count = (response.len() as u64) / 4;
+            state.backend_pool.record_tokens(target_url, token_count);
+            let elapsed_ms = start.elapsed().as_millis();
+            println!("Target {} responded in {}ms", target_url, elapsed_ms);
 
-                            tokio::time::sleep(Duration::from_secs(300)).await;
-
-                            let mut health = backend_health.write().await;
-                            health.insert(backend_url.clone(), false);
-                            println!("Backend {} cooling period over, re-enabling for routing", backend_url);
-                        });
-                    }
-
-                }
-
-                return Ok(Json(RouteResponse { response }));
-            }
-            Ok(Err(err)) => {
-                let message = format!("Error: {}", err);
-                println!("Backend {} failed on attempt {}: {}", backend.url, attempt, message);
-            }
-            Err(_) => {
-                println!("Backend {} timed out on attempt {}", backend.url, attempt);
-            }
+            return Ok(Json(RouteResponse { response }));
         }
-
-        if attempt < 3 {
-            backend = state.backend_pool.next_excluding(&backend.url).await;
+        Ok(Err(err)) => {
+            println!("Target {} failed: {}", target_url, err);
+        }
+        Err(_) => {
+            println!("Target {} timed out", target_url);
         }
     }
 
