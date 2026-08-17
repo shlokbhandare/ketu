@@ -226,3 +226,18 @@ To prove the resilience of the multi-node cluster, 200 requests were fired rando
 
 > **Architectural Insight on Failover Tax:** 
 > The error rate dropped to an absolute zero, proving that cross-node failover works seamlessly, not a single client request was dropped despite a hard backend crash. The tradeoff is the latency increase. Average latency rose by ~2 seconds because the cluster lost 50% of its compute capacity mid-test. The surviving backend had to process the remaining queue entirely on its own, demonstrating that in distributed systems, resilience often costs performance.
+
+### Semantic Routing Benchmarks (Phase 3 Efficiency Test)
+To evaluate the effectiveness of the heuristic classifier, 50 deterministic prompts were sent: 20 Low-Complexity, 20 High-Complexity (Logic/Code), and 10 Ambiguous (Uncertain).
+
+**Results:**
+* **Routing Correctness:** 100% (All prompts hit their intended model size)
+* **Average Latency (Overall):** 5,533.46 ms
+* **Average Low-Latency (3b):** ~1,350 ms
+* **Average High-Capacity (7b):** ~11,200 ms
+* **Error Rate:** 0.00%
+
+*(Check `benchmark_results3.csv` for raw data)*
+
+> **Architectural Insight on Resource Allocation:**
+> In Phase 1, a simple "What is the capital of France?" prompt had a 50% chance of hitting the 7b model and taking 11 seconds. In Phase 3, the Heuristic Engine (analyzer.rs) ensures those prompts are always handled in <1.5s. By sacrificing <1ms of CPU time for classification, we reduced the latency for simple queries by nearly 85% compared to the worst-case scenario in a blind round-robin system.

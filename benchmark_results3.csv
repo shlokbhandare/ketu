@@ -1,4 +1,4 @@
-Index,Type,Latency_ms,Target,Correct,Prompt
+ndex,Type,Latency_ms,Target,Correct,Prompt
 1,LowLatency,1603,http://localhost:11434,OK,"short prompt 1"
 2,LowLatency,1235,http://localhost:11434,OK,"short prompt 2"
 3,LowLatency,1281,http://localhost:11434,OK,"short prompt 3"

@@ -1,6 +1,7 @@
 #[derive(Debug, PartialEq)]
 pub enum PromptComplexity {
     LowLatency,
+    Uncertain,
     HighCapacity,
 }
 
@@ -60,8 +61,11 @@ pub fn calculate_score(prompt: &str) -> u32 {
 
 pub fn classify(prompt: &str) -> PromptComplexity {
     let score = calculate_score(prompt);
+
     if score >= 3 {
         PromptComplexity::HighCapacity
+    } else if score >= 1 {
+        PromptComplexity::Uncertain
     } else {
         PromptComplexity::LowLatency
     }
@@ -75,7 +79,7 @@ mod tests {
     fn simple_prompt_score_is_low() {
         let prompt = "hello, how are you?";
         let score = calculate_score(prompt);
-        assert!(score < 3, "expected score < 3, got {}", score);
+        assert_eq!(score, 0, "expected score 0, got {}", score);
         assert_eq!(classify(prompt), PromptComplexity::LowLatency);
     }
 
@@ -92,6 +96,7 @@ mod tests {
         let prompt = "What is 5 + 5 = ?";
         let score = calculate_score(prompt);
         assert!(score >= 1, "expected score >= 1, got {}", score);
+        assert_eq!(classify(prompt), PromptComplexity::Uncertain);
     }
 
     #[test]
@@ -99,5 +104,12 @@ mod tests {
         let prompt = "a".repeat(300);
         let score = calculate_score(&prompt);
         assert!(score >= 1, "expected score >= 1 for long prompt, got {}", score);
+        assert_eq!(classify(&prompt), PromptComplexity::Uncertain);
+    }
+
+    #[test]
+    fn medium_length_prompt_with_score_one_is_uncertain() {
+        let prompt = "Can you explain the tradeoffs of this approach?";
+        assert_eq!(classify(prompt), PromptComplexity::Uncertain);
     }
 }

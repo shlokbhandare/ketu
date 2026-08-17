@@ -1,5 +1,22 @@
 # Build Log
 
+## August 17, 2026
+
+**test: benchmark semantic routing vs round-robin (Phase 3)**
+Description:
+
+> Successfully completed Session 30 benchmarking. Validated that the heuristic scoring engine achieves 100% routing correctness on a 50-prompt mixed test set. Simple prompts were processed with an average latency of ~1.3s (llama3.2:3b), while complex prompts correctly utilized the larger qwen2.5:7b backend (~11s latency).
+
+**feat: implement telemetry headers for routing transparency**
+Description:
+
+> Instrumented the `/route` endpoint to return the `x-ketu-target` header. This allows external benchmarking tools and monitoring systems to verify routing decisions in real-time without needing access to internal server logs. Added a 60-second timeout to the benchmark suite to account for high-load 7b model generation.
+
+**fix: lifted rate-limit for benchmarking, fixed default model 404s**
+Description:
+
+> Increased the global rate-limit from 10 to 100 to allow for high-volume stress testing. Refactored the backend fallback logic to default to 'llama3.2:3b' instead of 'default', preventing 404 errors when no specific model is requested by the client.
+
 ## July 27, 2026
 
 **feat: implement heuristic semantic routing engine**

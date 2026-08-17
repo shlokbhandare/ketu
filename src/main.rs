@@ -13,9 +13,8 @@ use std::time::Duration;
 mod analyzer;
 mod backend;
 mod ollama;
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, HeaderValue};
 use backend::{Backend, BackendPool};
-use tracing::info;
 
 async fn health() -> &'static str {
     "ok"
@@ -89,7 +88,7 @@ async fn route(
     State(state): State<AppState>,
     headers: HeaderMap,
     Json(payload): Json<Value>,
-) -> Result<Json<RouteResponse>, StatusCode> {
+) -> Result<(HeaderMap, Json<RouteResponse>), StatusCode> {
     let ip = headers
         .get("x-forwarded-for")
         .and_then(|value| value.to_str().ok())
@@ -128,7 +127,7 @@ async fn route(
         }
     }
 
-    if count > 10 {
+    if count > 100 {
         return Err(StatusCode::TOO_MANY_REQUESTS);
     }
 
@@ -139,40 +138,82 @@ async fn route(
         .unwrap_or_else(|| serde_json::to_string(&payload).unwrap_or_default());
 
     let complexity = analyzer::classify(&extracted_text);
+    let mut backend_for_request = None;
     let target_url = match complexity {
-        analyzer::PromptComplexity::LowLatency => "http://localhost:11434",
-        analyzer::PromptComplexity::HighCapacity => "http://localhost:11435",
+        analyzer::PromptComplexity::LowLatency => Some("http://localhost:11434".to_string()),
+        analyzer::PromptComplexity::HighCapacity => Some("http://localhost:11435".to_string()),
+        analyzer::PromptComplexity::Uncertain => {
+            println!("[INFO] Ambiguous prompt detected, falling back to round-robin");
+            let backend = state.backend_pool.next().await;
+            backend_for_request = Some(backend);
+            None
+        }
     };
-    info!("Semantic routing: Classified as {:?} -> targeting {}", complexity, target_url);
 
-    let model = payload
-        .get("model")
-        .and_then(|v| v.as_str())
-        .unwrap_or("default");
+    let mut request_model = if let Some(backend) = backend_for_request.as_ref() {
+        backend.model.clone()
+    } else {
+        payload
+            .get("model")
+            .and_then(|value| value.as_str())
+            .unwrap_or("default")
+            .to_string()
+    };
+
+    if request_model == "default" {
+        println!("Using fallback model 'llama3.2:3b' for requests");
+        request_model = "llama3.2:3b".to_string();
+    }
+
+    let target_url = target_url.unwrap_or_else(|| {
+        backend_for_request
+            .as_ref()
+            .map(|backend| backend.url.clone())
+            .unwrap_or_else(|| "http://localhost:11434".to_string())
+    });
+
+    println!(
+        "[INFO] Semantic routing: Classified as {:?} -> targeting {}",
+        complexity,
+        target_url
+    );
+
+    // track the last error encountered while trying backends/peers
+    let mut last_err: Option<String> = None;
 
     let forwarded_payload = payload.clone();
 
     let start = std::time::Instant::now();
+    println!("[DEBUG] Sending request to {} for model {}", target_url, request_model);
     let result = tokio::time::timeout(
         std::time::Duration::from_secs(30),
-        ollama::generate(target_url, &extracted_text, model),
+        ollama::generate(&target_url, &extracted_text, &request_model),
     )
     .await;
 
     match result {
         Ok(Ok(response)) => {
             let token_count = (response.len() as u64) / 4;
-            state.backend_pool.record_tokens(target_url, token_count);
+            state.backend_pool.record_tokens(&target_url, token_count);
             let elapsed_ms = start.elapsed().as_millis();
             println!("Target {} responded in {}ms", target_url, elapsed_ms);
 
-            return Ok(Json(RouteResponse { response }));
+            let mut resp_headers = HeaderMap::new();
+            resp_headers.insert(
+                "x-ketu-target",
+                HeaderValue::from_str(&target_url)
+                    .unwrap_or_else(|_| HeaderValue::from_static("unknown")),
+            );
+
+            return Ok((resp_headers, Json(RouteResponse { response })));
         }
         Ok(Err(err)) => {
             println!("Target {} failed: {}", target_url, err);
+            last_err = Some(format!("target_error: {}", err));
         }
         Err(_) => {
             println!("Target {} timed out", target_url);
+            last_err = Some("timeout".to_string());
         }
     }
 
@@ -195,9 +236,18 @@ async fn route(
                         .json::<RouteResponse>()
                         .await
                         .map_err(|_| StatusCode::BAD_GATEWAY)?;
-                    return Ok(Json(peer_response));
+
+                    let mut resp_headers = HeaderMap::new();
+                    resp_headers.insert(
+                        "x-ketu-target",
+                        HeaderValue::from_str(&peer_url)
+                            .unwrap_or_else(|_| HeaderValue::from_static("unknown")),
+                    );
+
+                    return Ok((resp_headers, Json(peer_response)));
                 }
                 Ok(_) | Err(_) => {
+                    last_err = Some("peer_forward_failed".to_string());
                     return Err(StatusCode::BAD_GATEWAY);
                 }
             }
@@ -207,6 +257,7 @@ async fn route(
     if is_forwarded {
         Err(StatusCode::BAD_GATEWAY)
     } else {
+        println!("[ERROR] Route failed because: {:?}", last_err);
         Err(StatusCode::INTERNAL_SERVER_ERROR)
     }
 }
