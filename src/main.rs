@@ -7,6 +7,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use clap::Parser;
+use rand::Rng;
 use std::{collections::HashMap, sync::{Arc, Mutex}};
 use tokio::sync::{Mutex as TokioMutex, RwLock};
 use std::time::Duration;
@@ -341,7 +342,16 @@ async fn main() {
             let mut missed_heartbeats = 0u32;
 
             loop {
-                tokio::time::sleep(Duration::from_secs(10)).await;
+                if *role_for_monitor.lock().await != NodeRole::Follower {
+                    break;
+                }
+
+                let timeout = {
+                    let mut rng = rand::thread_rng();
+                    rng.gen_range(5..12)
+                };
+                println!("[DEBUG] Election timer set to {}s", timeout);
+                tokio::time::sleep(Duration::from_secs(timeout)).await;
 
                 let url = format!("http://{}/health", peer);
                 match client.get(&url).send().await {
@@ -358,18 +368,16 @@ async fn main() {
                         missed_heartbeats += 1;
                         let mut w = peer_state_clone.write().await;
                         if missed_heartbeats >= 3 {
-                            let was_connected = w.is_some();
-                            if was_connected {
+                            if w.is_some() {
                                 println!("peer lost: {}", peer);
                                 *w = None;
                             }
 
-                            if was_connected {
-                                let mut role = role_for_monitor.lock().await;
-                                if *role == NodeRole::Follower {
-                                    *role = NodeRole::Leader;
-                                    println!("leader lost, promoting self");
-                                }
+                            let mut role = role_for_monitor.lock().await;
+                            if *role == NodeRole::Follower {
+                                *role = NodeRole::Leader;
+                                println!("[RAFT] Term limit exceeded. Promoting self to Leader..");
+                                break;
                             }
                         }
                     }

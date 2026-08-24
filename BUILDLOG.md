@@ -1,5 +1,14 @@
 # Build Log
 
+
+## August 24, 2026
+
+**feat: implement Raft-style randomized election timeouts and state transitions**
+
+>Replaced static leader election with randomized election timeouts (5s-12s range).
+Implemented state transition logic: Followers now reset their random timers on successful heartbeats and stop monitoring once promoted to Leader.
+Randomization ensures that in a multi node failure, nodes won't collision during candidacy.
+
 ## August 17, 2026
 
 **test: benchmark semantic routing vs round-robin (Phase 3)**
