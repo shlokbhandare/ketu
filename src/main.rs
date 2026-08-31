@@ -17,8 +17,12 @@ mod ollama;
 use axum::http::{HeaderMap, HeaderValue};
 use backend::{Backend, BackendPool};
 
-async fn health() -> &'static str {
-    "ok"
+async fn health(State(state): State<AppState>) -> Json<TermInfo> {
+    let role = state.role.lock().await.clone();
+    Json(TermInfo {
+        term: *state.current_term.read().await,
+        role,
+    })
 }
 
 fn is_forwarded_header(headers: &HeaderMap) -> bool {
@@ -55,6 +59,22 @@ struct Args {
 struct RouteResponse {
     response: String,
 }
+#[derive(Deserialize, Serialize, Clone)]
+struct VoteRequest {
+    term: u32,
+    candidate_id: String,
+}
+
+#[derive(Deserialize, Serialize)]
+struct VoteResponse {
+    term: u32,
+    vote_granted: bool,
+}
+#[derive(Deserialize, Serialize)]
+struct TermInfo {
+    term: u32,
+    role: NodeRole,
+}
 
 #[derive(Deserialize)]
 struct HealthUpdate {
@@ -68,10 +88,11 @@ struct RateSync {
     increment: u32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 enum NodeRole {
     Leader,
     Follower,
+    Candidate,
 }
 
 #[derive(Clone)]
@@ -80,6 +101,8 @@ struct AppState {
     request_counts: Arc<Mutex<HashMap<String, (u32, std::time::Instant)>>>,
     peer_state: Arc<RwLock<Option<String>>>,
     backend_health: Arc<RwLock<HashMap<String, bool>>>,
+    current_term: Arc<RwLock<u32>>,
+    voted_for: Arc<RwLock<Option<String>>>,
     role: Arc<TokioMutex<NodeRole>>,
     http_client: reqwest::Client,
 }
@@ -264,6 +287,79 @@ async fn route(
 }
 
 #[axum::debug_handler]
+async fn request_vote_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<VoteRequest>,
+) -> Json<VoteResponse> {
+    println!("[DEBUG] Vote handler hit!");
+    println!(
+        "[DEBUG] VOTE REQUEST received from {} for Term {}",
+        payload.candidate_id, payload.term
+    );
+    println!(
+        "[DEBUG] Incoming vote request: Candidate {} is asking for a vote in Term {}..",
+        payload.candidate_id, payload.term
+    );
+
+    let mut current_term = state.current_term.write().await;
+    let mut voted_for = state.voted_for.write().await;
+    let mut role = state.role.lock().await;
+
+    if payload.term < *current_term {
+        println!(
+            "[RAFT] Voting NO for {} (Reason: Term too low or already voted)",
+            payload.candidate_id
+        );
+        println!(
+            "[RAFT] Received vote request from {} for Term {}. Vote granted: false.",
+            payload.candidate_id, payload.term
+        );
+        return Json(VoteResponse {
+            term: *current_term,
+            vote_granted: false,
+        });
+    }
+
+    let grant_vote = if payload.term > *current_term {
+        *current_term = payload.term;
+        *role = NodeRole::Follower;
+        *voted_for = None;
+        true
+    } else if payload.term == *current_term {
+        match voted_for.as_ref() {
+            None => true,
+            Some(existing) => existing == &payload.candidate_id,
+        }
+    } else {
+        false
+    };
+
+    if grant_vote {
+        *voted_for = Some(payload.candidate_id.clone());
+        println!("[RAFT] Voting YES for {}.", payload.candidate_id);
+    } else {
+        println!(
+            "[RAFT] Voting NO for {} (Reason: Term too low or already voted)",
+            payload.candidate_id
+        );
+    }
+
+    println!(
+        "[RAFT] Vote result for {}: {}.",
+        payload.candidate_id, grant_vote
+    );
+    println!(
+        "[RAFT] Received vote request from {} for Term {}. Vote granted: {}.",
+        payload.candidate_id, payload.term, grant_vote
+    );
+
+    Json(VoteResponse {
+        term: *current_term,
+        vote_granted: grant_vote,
+    })
+}
+
+#[axum::debug_handler]
 async fn peer_health_update(
     State(state): State<AppState>,
     Json(update): Json<HealthUpdate>,
@@ -310,14 +406,18 @@ async fn main() {
     let backend_pool = Arc::new(BackendPool::new(config.backends, backend_health.clone()));
     let request_counts = Arc::new(Mutex::new(HashMap::new()));
     let peer_state: Arc<RwLock<Option<String>>> = Arc::new(RwLock::new(None));
+    let current_term: Arc<RwLock<u32>> = Arc::new(RwLock::new(0));
+    let voted_for: Arc<RwLock<Option<String>>> = Arc::new(RwLock::new(None));
     let role = Arc::new(TokioMutex::new(if args.peer.is_some() {
         NodeRole::Follower
     } else {
         NodeRole::Leader
     }));
+    println!("[INFO] Initializing at Term 0.");
     let initial_role = match *role.lock().await {
         NodeRole::Leader => "Leader",
         NodeRole::Follower => "Follower",
+        NodeRole::Candidate => "Candidate",
     };
     println!("Starting as {}", initial_role);
     let http_client = reqwest::Client::builder()
@@ -329,6 +429,8 @@ async fn main() {
         request_counts: request_counts.clone(),
         peer_state: peer_state.clone(),
         backend_health: backend_health.clone(),
+        current_term: current_term.clone(),
+        voted_for: voted_for.clone(),
         role: role.clone(),
         http_client: http_client.clone(),
     };
@@ -337,12 +439,17 @@ async fn main() {
         let peer = addr.clone();
         let peer_state_clone = peer_state.clone();
         let role_for_monitor = role.clone();
+        let current_term_for_monitor = current_term.clone();
+        let candidate_id = format!("127.0.0.1:{}", args.port);
         tokio::spawn(async move {
             let client = reqwest::Client::new();
             let mut missed_heartbeats = 0u32;
 
             loop {
-                if *role_for_monitor.lock().await != NodeRole::Follower {
+                if !matches!(
+                    *role_for_monitor.lock().await,
+                    NodeRole::Follower | NodeRole::Candidate
+                ) {
                     break;
                 }
 
@@ -354,9 +461,47 @@ async fn main() {
                 tokio::time::sleep(Duration::from_secs(timeout)).await;
 
                 let url = format!("http://{}/health", peer);
-                match client.get(&url).send().await {
+                let health_result = client.get(&url).send().await;
+
+                match health_result {
                     Ok(resp) if resp.status().is_success() => {
-                        missed_heartbeats = 0;
+                        let heartbeat = match resp.json::<TermInfo>().await {
+                            Ok(info) => info,
+                            Err(_) => TermInfo {
+                                term: 0,
+                                role: NodeRole::Follower,
+                            },
+                        };
+
+                        let peer_term = heartbeat.term;
+                        let peer_role = heartbeat.role;
+
+                        if peer_term > *current_term_for_monitor.read().await {
+                            let mut term = current_term_for_monitor.write().await;
+                            let previous_term = *term;
+                            *term = peer_term;
+
+                            let mut role = role_for_monitor.lock().await;
+                            if *role == NodeRole::Leader {
+                                *role = NodeRole::Follower;
+                            }
+
+                            println!(
+                                "[RAFT] Syncing Term: {} -> {}. Stepping down/staying as Follower..",
+                                previous_term, peer_term
+                            );
+                        }
+
+                        if peer_role == NodeRole::Leader {
+                            missed_heartbeats = 0;
+                        } else {
+                            missed_heartbeats += 1;
+                            println!(
+                                "[DEBUG] Peer is alive but is a {:?}. Timer continuing: {}/3",
+                                peer_role, missed_heartbeats
+                            );
+                        }
+
                         let mut w = peer_state_clone.write().await;
                         let was_connected = w.is_some();
                         *w = Some(peer.clone());
@@ -366,20 +511,77 @@ async fn main() {
                     }
                     Ok(_) | Err(_) => {
                         missed_heartbeats += 1;
-                        let mut w = peer_state_clone.write().await;
-                        if missed_heartbeats >= 3 {
-                            if w.is_some() {
-                                println!("peer lost: {}", peer);
-                                *w = None;
-                            }
+                    }
+                }
 
-                            let mut role = role_for_monitor.lock().await;
-                            if *role == NodeRole::Follower {
-                                *role = NodeRole::Leader;
-                                println!("[RAFT] Term limit exceeded. Promoting self to Leader..");
-                                break;
+                if missed_heartbeats >= 3 {
+                    missed_heartbeats = 0;
+
+                    let mut w = peer_state_clone.write().await;
+                    if w.is_some() {
+                        println!("peer lost: {}", peer);
+                        *w = None;
+                    }
+
+                    let mut role = role_for_monitor.lock().await;
+                    if matches!(*role, NodeRole::Follower | NodeRole::Candidate) {
+                        let mut term = current_term_for_monitor.write().await;
+                        *term += 1;
+                        let new_term = *term;
+                        *role = NodeRole::Candidate;
+                        println!("[RAFT] Starting election for Term {}", new_term);
+
+                        let vote_url = format!("http://{}/raft/request-vote", peer);
+                        let vote_request = VoteRequest {
+                            term: new_term,
+                            candidate_id: candidate_id.clone(),
+                        };
+
+                        let vote_response = reqwest::Client::new()
+                            .post(&vote_url)
+                            .json(&vote_request)
+                            .timeout(Duration::from_secs(2))
+                            .send()
+                            .await;
+
+                        let vote_granted = match vote_response {
+                            Ok(resp) if resp.status().is_success() => {
+                                match resp.json::<VoteResponse>().await {
+                                    Ok(vote) => vote.vote_granted,
+                                    Err(_) => false,
+                                }
                             }
+                            Ok(resp) => {
+                                println!(
+                                    "[DEBUG] /raft/request-vote POST failed with status {} for peer {}",
+                                    resp.status(),
+                                    peer
+                                );
+                                false
+                            }
+                            Err(err) => {
+                                println!(
+                                    "[DEBUG] /raft/request-vote POST error for peer {}: {}",
+                                    peer, err
+                                );
+                                false
+                            }
+                        };
+
+                        let votes = if vote_granted { 2 } else { 1 };
+
+                        if votes == 2 {
+                            *role = NodeRole::Leader;
+                            println!(
+                                "[RAFT] Quorum reached (2/2). I am now the Leader of Term {}..",
+                                new_term
+                            );
+                            break;
                         }
+
+                        println!(
+                            "[RAFT] Quorum failed (1/2). Restarting election timer.."
+                        );
                     }
                 }
             }
@@ -399,6 +601,7 @@ async fn main() {
     let app = Router::new()
         .route("/health", get(health))
         .route("/route", post(route))
+        .route("/raft/request-vote", post(request_vote_handler))
         .route("/peer/health-update", post(peer_health_update))
         .route("/peer/rate-sync", post(peer_rate_sync))
         .route("/stats", get(stats))
@@ -418,6 +621,17 @@ async fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn term_info_tracks_role_for_heartbeat_responses() {
+        let info = TermInfo {
+            term: 7,
+            role: NodeRole::Leader,
+        };
+
+        assert_eq!(info.term, 7);
+        assert_eq!(info.role, NodeRole::Leader);
+    }
 
     #[test]
     fn forwarded_header_is_detected() {
@@ -451,6 +665,58 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert("x-ketu-forwarded", "1".parse().unwrap());
         assert!(!is_forwarded_header(&headers));
+    }
+
+    #[tokio::test]
+    async fn request_vote_grants_on_new_term_when_not_voted() {
+        let state = AppState {
+            backend_pool: Arc::new(BackendPool::new(vec![], Arc::new(RwLock::new(HashMap::new())))),
+            request_counts: Arc::new(Mutex::new(HashMap::new())),
+            peer_state: Arc::new(RwLock::new(None)),
+            backend_health: Arc::new(RwLock::new(HashMap::new())),
+            current_term: Arc::new(RwLock::new(0)),
+            voted_for: Arc::new(RwLock::new(None)),
+            role: Arc::new(TokioMutex::new(NodeRole::Leader)),
+            http_client: reqwest::Client::new(),
+        };
+
+        let Json(response) = request_vote_handler(
+            State(state),
+            Json(VoteRequest {
+                term: 1,
+                candidate_id: "node-b".to_string(),
+            }),
+        )
+        .await;
+
+        assert_eq!(response.term, 1);
+        assert!(response.vote_granted);
+    }
+
+    #[tokio::test]
+    async fn request_vote_rejects_when_already_voted_for_another_candidate() {
+        let state = AppState {
+            backend_pool: Arc::new(BackendPool::new(vec![], Arc::new(RwLock::new(HashMap::new())))),
+            request_counts: Arc::new(Mutex::new(HashMap::new())),
+            peer_state: Arc::new(RwLock::new(None)),
+            backend_health: Arc::new(RwLock::new(HashMap::new())),
+            current_term: Arc::new(RwLock::new(2)),
+            voted_for: Arc::new(RwLock::new(Some("node-a".to_string()))),
+            role: Arc::new(TokioMutex::new(NodeRole::Follower)),
+            http_client: reqwest::Client::new(),
+        };
+
+        let Json(response) = request_vote_handler(
+            State(state),
+            Json(VoteRequest {
+                term: 2,
+                candidate_id: "node-b".to_string(),
+            }),
+        )
+        .await;
+
+        assert_eq!(response.term, 2);
+        assert!(!response.vote_granted);
     }
 }
 

@@ -1,5 +1,20 @@
 # Build Log
 
+## August 31, 2026
+
+
+**feat: implement Raft quorum-based voting and election campaigning**
+
+>Implemented /raft/request-vote endpoint and voting logic.
+Refactored promotion path: nodes now transition to Candidate and must secure a majority (2/2) before becoming Leader.
+Fixed "Politeness Paradox" by ensuring heartbeats from non-leaders do not reset election timers.
+
+**feat: implement Raft term synchronization and logical clock**
+
+>Implemented current_term in AppState to track election cycles.
+Successfully verified "Zombie Node" recovery: nodes restarting at Term 0 now automatically sync to the highest cluster term (0 -> 1) upon heartbeat response.
+Established the safety rule: Higher terms always override local state, ensuring a single timeline across the cluster.
+
 
 ## August 24, 2026
 
